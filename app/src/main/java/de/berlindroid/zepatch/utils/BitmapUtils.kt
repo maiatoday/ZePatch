@@ -2,12 +2,8 @@ package de.berlindroid.zepatch.utils
 
 import android.graphics.Bitmap
 import android.graphics.Color
-import kotlin.math.abs
 import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.pow
 import kotlin.math.roundToInt
-import kotlin.math.sqrt
 
 /**
  * Reduces the number of colors in this [Bitmap] using a simple k-means quantization on RGB.
