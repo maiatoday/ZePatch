@@ -3,6 +3,7 @@ package de.berlindroid.zepatch
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import de.berlindroid.zepatch.patchable.Demo
+import de.berlindroid.zepatch.patchable.GradientBall
 
 /**
  * It's like Dagger, but way worse.
@@ -30,5 +31,6 @@ val patchables = mapOf<String, @Composable () -> Unit>(
     "Testing16" to { BasicText("123") },
     "Testing17" to { BasicText("123") },
     "Testing19" to { BasicText("123") },
+    "GradientBall" to { GradientBall() },
     "Demo" to { Demo() },
 )

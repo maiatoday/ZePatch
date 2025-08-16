@@ -66,7 +66,6 @@ fun CaptureToBitmap(
                     onBitmap(bitmap)
                 }
             }
-            .background(Color.White)
     ) {
         content()
     }
