@@ -1,12 +1,9 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    schedule: 
-      interval: "cron"
-      cronjob: "23 14 1 * *"
-
+    schedule:
+      interval: "weekly"
   - package-ecosystem: "gradle"
     schedule: 
-      interval: "cron"
-      cronjob: "24 14 1 * *"
+      interval: "weekly"
   
