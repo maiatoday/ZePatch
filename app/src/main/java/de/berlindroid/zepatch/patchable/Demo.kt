@@ -11,9 +11,7 @@ import de.berlindroid.zepatch.annotations.Patch
 
 @Patch("Demo")
 @Composable
-fun Demo(
-    modifier: Modifier = Modifier,
-) {
+fun Demo() {
     SafeArea {
         Text("Demo")
     }
@@ -21,9 +19,7 @@ fun Demo(
 
 @Patch("Demo2")
 @Composable
-fun Demo2(
-    modifier: Modifier = Modifier,
-) {
+fun Demo2() {
     SafeArea {
         Text("Another Demo")
     }

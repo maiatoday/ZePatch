@@ -4,32 +4,25 @@ import com.google.devtools.ksp.KspExperimental
 import com.google.devtools.ksp.getAnnotationsByType
 import com.google.devtools.ksp.processing.CodeGenerator
 import com.google.devtools.ksp.processing.Dependencies
-import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
 import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
-import com.google.devtools.ksp.symbol.Origin
 import com.google.devtools.ksp.validate
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.asTypeName
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.asTypeName
 import de.berlindroid.zepatch.annotations.Patch
 
-class PatchSymbolProcessor(
-    private val environment: com.google.devtools.ksp.processing.SymbolProcessorEnvironment
-) : SymbolProcessor {
-    private val logger: KSPLogger = environment.logger
+class PatchSymbolProcessor(environment: SymbolProcessorEnvironment) : SymbolProcessor {
     private val codeGenerator: CodeGenerator = environment.codeGenerator
 
     @OptIn(KspExperimental::class)
@@ -37,18 +30,18 @@ class PatchSymbolProcessor(
         val patchAnnotation = Patch::class
         val symbols = resolver.getSymbolsWithAnnotation(patchAnnotation.qualifiedName!!).toList()
 
-        val patchFunctions = symbols.filterIsInstance<KSFunctionDeclaration>().filter { it.validate() }
+        val patchFunctions =
+            symbols.filterIsInstance<KSFunctionDeclaration>().filter { it.validate() }
 
         if (patchFunctions.isEmpty()) return emptyList()
 
         // Build map entries
-        val entries = patchFunctions.mapNotNull { funDecl ->
+        val entries = patchFunctions.map { funDecl ->
             val pkgName = funDecl.packageName.asString()
             val simpleName = funDecl.simpleName.asString()
             val ann = funDecl.getAnnotationsByType(Patch::class).firstOrNull()
             val key = ann?.name?.takeIf { it.isNotBlank() } ?: simpleName
 
-            // Build FQ function call reference
             val fqName = "$pkgName.$simpleName"
             MapEntry(key, fqName)
         }
@@ -62,7 +55,6 @@ class PatchSymbolProcessor(
         val objectName = "PatchRegistry"
         val composableAnnotation = ClassName("androidx.compose.runtime", "Composable")
 
-        val unitComposable = CodeBlock.of("@%T () -> Unit", composableAnnotation)
         val mapType = com.squareup.kotlinpoet.MAP.parameterizedBy(
             String::class.asTypeName(),
             LambdaTypeName.get(returnType = Unit::class.asTypeName()).copy(
