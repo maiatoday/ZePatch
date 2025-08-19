@@ -33,11 +33,13 @@ fun PatchableToBitmap(
             content = patchable
         )
 
-        val b = image
-        if (b != null) {
-            Image(bitmap = b, contentDescription = "patch bitmap", modifier = Modifier.fillMaxWidth())
-        } else {
-            CircularProgressIndicator()
-        }
+        image?.let {
+            Image(
+                bitmap = it,
+                contentDescription = "patch bitmap",
+                modifier = Modifier.fillMaxWidth()
+            )
+        } ?: CircularProgressIndicator()
+
     }
 }
