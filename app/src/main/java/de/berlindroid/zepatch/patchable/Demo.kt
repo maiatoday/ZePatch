@@ -7,13 +7,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import de.berlindroid.zepatch.annotations.Patch
 
+@Patch("Demo")
 @Composable
-fun Demo(
-    modifier: Modifier = Modifier,
-) {
+fun Demo() {
     SafeArea {
         Text("Demo")
+    }
+}
+
+@Patch("Demo2")
+@Composable
+fun Demo2() {
+    SafeArea {
+        Text("Another Demo")
     }
 }
 
