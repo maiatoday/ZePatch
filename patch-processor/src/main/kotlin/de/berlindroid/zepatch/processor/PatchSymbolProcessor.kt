@@ -22,8 +22,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import de.berlindroid.zepatch.annotations.Patch
 
-class PatchSymbolProcessor(environment: SymbolProcessorEnvironment) : SymbolProcessor {
-    private val codeGenerator: CodeGenerator = environment.codeGenerator
+class PatchSymbolProcessor(val environment: SymbolProcessorEnvironment) : SymbolProcessor {
 
     @OptIn(KspExperimental::class)
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -32,11 +31,18 @@ class PatchSymbolProcessor(environment: SymbolProcessorEnvironment) : SymbolProc
 
         val patchFunctions =
             symbols.filterIsInstance<KSFunctionDeclaration>().filter { it.validate() }
-
         if (patchFunctions.isEmpty()) return emptyList()
 
+        environment.logger.info(">>> Found ${symbols.size} symbols with @Patch annotation.")
         // Build map entries
         val entries = patchFunctions.map { funDecl ->
+            val containingFile = funDecl.containingFile
+            containingFile?.let {
+                environment.logger.info(
+                    ">>> Processing @Patch function '${funDecl.qualifiedName?.asString()}' " +
+                            "found in file: ${it.filePath}"
+                )
+            }
             val pkgName = funDecl.packageName.asString()
             val simpleName = funDecl.simpleName.asString()
             val ann = funDecl.getAnnotationsByType(Patch::class).firstOrNull()
@@ -85,7 +91,7 @@ class PatchSymbolProcessor(environment: SymbolProcessorEnvironment) : SymbolProc
             .build()
 
         val fileBytes = file.toString().toByteArray()
-        codeGenerator.createNewFile(
+        environment.codeGenerator.createNewFile(
             Dependencies(aggregating = true, *emptyArray()),
             packageName,
             objectName
