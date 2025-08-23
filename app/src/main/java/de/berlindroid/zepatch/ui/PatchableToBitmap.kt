@@ -28,7 +28,6 @@ fun PatchableToBitmap(
         // Compose the content through the composable utility; it will invoke the callback when ready.
         CaptureToBitmap(
             modifier = Modifier.fillMaxWidth(),
-            autoCapture = true,
             onBitmap = { img -> image = img },
             content = patchable
         )

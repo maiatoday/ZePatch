@@ -33,22 +33,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun CaptureToBitmap(
     modifier: Modifier = Modifier,
-    autoCapture: Boolean = true,
     onBitmap: (ImageBitmap) -> Unit,
     content: @Composable () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val graphicsLayer = rememberGraphicsLayer()
-    var captured by remember { mutableStateOf(false) }
-
-    // Optionally capture once after first composition
-    LaunchedEffect(autoCapture) {
-        if (autoCapture && !captured) {
-            captured = true
-            val capturedImage = graphicsLayer.toImageBitmap()
-            onBitmap(capturedImage)
-        }
-    }
 
     Box(
         modifier = modifier
@@ -57,8 +46,6 @@ fun CaptureToBitmap(
                 graphicsLayer.record {
                     this@drawWithContent.drawContent()
                 }
-                // Draw the content normally so it appears on screen
-                this.drawContent()
             }
             .clickable {
                 coroutineScope.launch {
