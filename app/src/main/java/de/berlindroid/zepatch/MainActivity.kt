@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -47,9 +46,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import de.berlindroid.zepatch.ui.PatchableBoundingBox
+import de.berlindroid.zepatch.ui.PatchableToBitmap
 import de.berlindroid.zepatch.ui.theme.ZePatchTheme
 import kotlinx.coroutines.launch
 
@@ -159,20 +159,6 @@ private fun PatchableList(
     }
 }
 
-@Composable
-private fun PatchableBoundingBox(
-    modifier: Modifier = Modifier,
-    patchable: @Composable () -> Unit
-) {
-    Box(
-        modifier = modifier.border(
-            width = 1.dp,
-            color = Color.Black,
-        ),
-    ) {
-        patchable()
-    }
-}
 
 @ExperimentalMaterial3Api
 @Composable
@@ -229,12 +215,12 @@ private fun PatchableDetail(
             }
             when (currentMode) {
                 PatchablePreviewMode.COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
-                PatchablePreviewMode.TBD -> Text("Not implemented")
+                PatchablePreviewMode.BITMAP -> PatchableToBitmap(patchable = patchable)
             }
         }
     }
 }
 
 private enum class PatchablePreviewMode {
-    COMPOSABLE, TBD
+    COMPOSABLE, BITMAP
 }
