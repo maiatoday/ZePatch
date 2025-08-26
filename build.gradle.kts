@@ -6,4 +6,5 @@ plugins {
     alias(libs.plugins.kotlin.parcelize) apply false
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.python) apply false
+    alias(libs.plugins.android.library) apply false
 }

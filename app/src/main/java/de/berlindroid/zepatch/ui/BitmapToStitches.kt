@@ -1,12 +1,10 @@
 package de.berlindroid.zepatch.ui
 
-import android.content.ContentResolver
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -14,18 +12,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import de.berlindroid.zepatch.utils.StitchToPES
-import java.io.File
-import java.io.FileOutputStream
-import java.net.URI
-import kotlin.contracts.contract
+import de.berlindroid.zepatch.stiches.Thread
+import de.berlindroid.zepatch.stiches.Embroidery
+import de.berlindroid.zepatch.stiches.StitchToPES
+import de.berlindroid.zepatch.stiches.StitchToPES.createDummyEmbroidery
+import de.berlindroid.zepatch.stiches.XY
+import kotlin.math.PI
+import kotlin.math.cos
 
 /**
  * Renders the provided [patchable] into a Bitmap-like [ImageBitmap] and displays it via [Image].
@@ -75,7 +75,9 @@ fun BitmapToStitches(
 
     Box(modifier = modifier.fillMaxWidth()) {
         Button(onClick = {
-            val pes = StitchToPES.doit()
+            val embroidery = createDummyEmbroidery()
+
+            val pes = StitchToPES.convert(context, embroidery)
             if (pes == null || pes.isEmpty()) {
                 return@Button
             }

@@ -23,3 +23,4 @@ rootProject.name = "ZePatch"
 include(":app")
 include(":patch-annotations")
 include(":patch-processor")
+include(":converter")

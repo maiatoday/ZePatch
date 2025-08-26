@@ -4,7 +4,6 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.python)
 }
 
 android {
@@ -19,10 +18,6 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
-        }
     }
 
     buildTypes {
@@ -40,22 +35,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-}
-
-chaquopy {
-    defaultConfig {
-        buildPython("/opt/homebrew/bin/python3")
-
-        pip {
-            install("pystitch")
-        }
-
-        version = "3.13"
-
-        staticProxy(
-//                "converter.Converter"
-        )
     }
 }
 
@@ -83,6 +62,7 @@ dependencies {
     implementation(project(":patch-annotations"))
     implementation(project(":patch-processor"))
     ksp(project(":patch-processor"))
+    implementation(project(":converter"))
 
     testImplementation(libs.junit)
     testImplementation(libs.test.robolectric)
