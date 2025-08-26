@@ -48,6 +48,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import de.berlindroid.zepatch.ui.BitmapToStitches
 import de.berlindroid.zepatch.ui.PatchableBoundingBox
 import de.berlindroid.zepatch.ui.PatchableToBitmap
 import de.berlindroid.zepatch.ui.theme.ZePatchTheme
@@ -82,7 +83,9 @@ class MainActivity : ComponentActivity() {
                                 },
                             ) { innerPadding ->
                                 PatchableList(
-                                    modifier = Modifier.padding(innerPadding).padding(horizontal = 8.dp),
+                                    modifier = Modifier
+                                        .padding(innerPadding)
+                                        .padding(horizontal = 8.dp),
                                 ) { name ->
                                     scope.launch {
                                         scaffoldNavigator.navigateTo(
@@ -199,7 +202,9 @@ private fun PatchableDetail(
         ) {
             var currentMode by remember { mutableStateOf(PatchablePreviewMode.COMPOSABLE) }
             SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
             ) {
                 PatchablePreviewMode.entries.toTypedArray().forEachIndexed { index, mode ->
                     SegmentedButton(
@@ -216,11 +221,13 @@ private fun PatchableDetail(
             when (currentMode) {
                 PatchablePreviewMode.COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
                 PatchablePreviewMode.BITMAP -> PatchableToBitmap(patchable = patchable)
+                PatchablePreviewMode.REDUCED_BITMAP -> PatchableToBitmap(patchable = patchable)
+                PatchablePreviewMode.STITCHES -> BitmapToStitches(patchable = patchable)
             }
         }
     }
 }
 
 private enum class PatchablePreviewMode {
-    COMPOSABLE, BITMAP
+    COMPOSABLE, BITMAP, REDUCED_BITMAP, STITCHES
 }
