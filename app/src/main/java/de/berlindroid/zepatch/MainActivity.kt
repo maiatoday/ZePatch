@@ -48,9 +48,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import de.berlindroid.zepatch.PatchablePreviewMode.*
 import de.berlindroid.zepatch.ui.BitmapToStitches
 import de.berlindroid.zepatch.ui.PatchableBoundingBox
 import de.berlindroid.zepatch.ui.PatchableToBitmap
+import de.berlindroid.zepatch.ui.PatchableToReducedBitmap
 import de.berlindroid.zepatch.ui.theme.ZePatchTheme
 import kotlinx.coroutines.launch
 
@@ -200,7 +202,7 @@ private fun PatchableDetail(
         Column(
             modifier = Modifier.padding(innerPadding),
         ) {
-            var currentMode by remember { mutableStateOf(PatchablePreviewMode.COMPOSABLE) }
+            var currentMode by remember { mutableStateOf(COMPOSABLE) }
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -208,6 +210,7 @@ private fun PatchableDetail(
             ) {
                 PatchablePreviewMode.entries.toTypedArray().forEachIndexed { index, mode ->
                     SegmentedButton(
+                        modifier = Modifier.height(48.dp),
                         shape = SegmentedButtonDefaults.itemShape(
                             index = index,
                             count = PatchablePreviewMode.entries.size,
@@ -219,10 +222,15 @@ private fun PatchableDetail(
                 }
             }
             when (currentMode) {
-                PatchablePreviewMode.COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
-                PatchablePreviewMode.BITMAP -> PatchableToBitmap(patchable = patchable)
-                PatchablePreviewMode.REDUCED_BITMAP -> PatchableToBitmap(patchable = patchable)
-                PatchablePreviewMode.STITCHES -> BitmapToStitches(patchable = patchable)
+                COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
+
+                BITMAP -> PatchableToBitmap(patchable = patchable)
+
+                REDUCED_BITMAP -> PatchableToReducedBitmap(
+                    patchable = patchable
+                )
+
+                STITCHES -> BitmapToStitches(patchable = patchable, name = name)
             }
         }
     }

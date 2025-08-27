@@ -6,7 +6,7 @@ import os
 from os.path import join
 from base64 import b64encode
 
-def convert(embroidery):
+def convert(embroidery, file_format="pes"):
     # convert embroidery into PES
 
     name = embroidery.getName()
@@ -32,11 +32,15 @@ def convert(embroidery):
     pattern.add_stitch_relative(END, 0, 0)
     pattern.move_center_to_origin()
 
-    filename = join(os.environ["HOME"], f"generated-in-py-{name}-{stitches}.pes")
+    filename = join(os.environ["HOME"], f"{name}-{stitches}.{file_format}")
 
     print(f"Saving to '{filename}'.")
-    write(pattern, filename)
-    write(pattern, filename.replace('pes','png'), {"fancy":"true"})
+    if file_format == "pes":
+        settings = {"fancy": "true"}
+    else:
+        settings = None
+
+    write(pattern, filename, settings)
     print("done")
 
     out = open(filename, "rb")
@@ -44,5 +48,4 @@ def convert(embroidery):
     out.close()
 
     # todo delete files?
-
     return result

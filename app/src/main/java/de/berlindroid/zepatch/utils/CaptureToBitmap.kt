@@ -53,7 +53,7 @@ fun CaptureToBitmap(
                     onBitmap(bitmap)
                 }
             }
-            .background(Color.White)
+            .background(Color.Transparent)
     ) {
         content()
     }
