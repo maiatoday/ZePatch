@@ -32,7 +32,7 @@ kotlin {
 
 chaquopy {
     defaultConfig {
-        buildPython("/opt/homebrew/bin/python3")
+        buildPython(System.getenv("ZEPATCH_PYTHON_PATH"))
 
         pip {
             install("pystitch")
