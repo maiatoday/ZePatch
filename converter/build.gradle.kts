@@ -35,7 +35,7 @@ chaquopy {
         buildPython(System.getenv("ZEPATCH_PYTHON_PATH"))
 
         pip {
-            install("pystitch")
+            install("pystitch==1.0.0")
         }
 
         version = "3.13"
