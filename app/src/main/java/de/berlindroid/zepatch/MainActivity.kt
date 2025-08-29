@@ -48,8 +48,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
+import de.berlindroid.zepatch.PatchablePreviewMode.*
+import de.berlindroid.zepatch.ui.BitmapToStitches
 import de.berlindroid.zepatch.ui.PatchableBoundingBox
 import de.berlindroid.zepatch.ui.PatchableToBitmap
+import de.berlindroid.zepatch.ui.PatchableToReducedBitmap
 import de.berlindroid.zepatch.ui.theme.ZePatchTheme
 import kotlinx.coroutines.launch
 
@@ -82,7 +85,9 @@ class MainActivity : ComponentActivity() {
                                 },
                             ) { innerPadding ->
                                 PatchableList(
-                                    modifier = Modifier.padding(innerPadding).padding(horizontal = 8.dp),
+                                    modifier = Modifier
+                                        .padding(innerPadding)
+                                        .padding(horizontal = 8.dp),
                                 ) { name ->
                                     scope.launch {
                                         scaffoldNavigator.navigateTo(
@@ -197,12 +202,15 @@ private fun PatchableDetail(
         Column(
             modifier = Modifier.padding(innerPadding),
         ) {
-            var currentMode by remember { mutableStateOf(PatchablePreviewMode.COMPOSABLE) }
+            var currentMode by remember { mutableStateOf(COMPOSABLE) }
             SingleChoiceSegmentedButtonRow(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
             ) {
                 PatchablePreviewMode.entries.toTypedArray().forEachIndexed { index, mode ->
                     SegmentedButton(
+                        modifier = Modifier.height(48.dp),
                         shape = SegmentedButtonDefaults.itemShape(
                             index = index,
                             count = PatchablePreviewMode.entries.size,
@@ -214,13 +222,20 @@ private fun PatchableDetail(
                 }
             }
             when (currentMode) {
-                PatchablePreviewMode.COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
-                PatchablePreviewMode.BITMAP -> PatchableToBitmap(patchable = patchable)
+                COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
+
+                BITMAP -> PatchableToBitmap(patchable = patchable)
+
+                REDUCED_BITMAP -> PatchableToReducedBitmap(
+                    patchable = patchable
+                )
+
+                STITCHES -> BitmapToStitches(patchable = patchable, name = name)
             }
         }
     }
 }
 
 private enum class PatchablePreviewMode {
-    COMPOSABLE, BITMAP
+    COMPOSABLE, BITMAP, REDUCED_BITMAP, STITCHES
 }

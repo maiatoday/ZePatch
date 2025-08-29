@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "de.berlindroid.zepatch"
-        minSdk = 21
+        minSdk = 24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -62,8 +62,13 @@ dependencies {
     implementation(project(":patch-annotations"))
     implementation(project(":patch-processor"))
     ksp(project(":patch-processor"))
+    implementation(project(":converter"))
 
     testImplementation(libs.junit)
+    testImplementation(libs.test.robolectric)
+    testImplementation(libs.test.core)
+    testImplementation(libs.androidx.junit.ktx)
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -1,5 +1,8 @@
 name: Main
 
+env:
+  ZEPATCH_PYTHON_PATH: "/usr/bin/python3"
+
 on:
   push:
     branches: [ main ]
