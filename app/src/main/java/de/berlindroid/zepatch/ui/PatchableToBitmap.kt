@@ -2,8 +2,11 @@ package de.berlindroid.zepatch.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,12 +26,21 @@ fun PatchableToBitmap(
     patchable: @Composable () -> Unit,
 ) {
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
+    var capture by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier.fillMaxWidth()) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Button(onClick = {
+            image = null
+            capture = true
+        }) { Text("Do it") }
         // Compose the content through the composable utility; it will invoke the callback when ready.
         CaptureToBitmap(
             modifier = Modifier.fillMaxWidth(),
-            onBitmap = { img -> image = img },
+            capture = capture,
+            onBitmap = { img ->
+                image = img
+                capture = false
+            },
             content = patchable
         )
 
@@ -42,3 +54,5 @@ fun PatchableToBitmap(
 
     }
 }
+
+

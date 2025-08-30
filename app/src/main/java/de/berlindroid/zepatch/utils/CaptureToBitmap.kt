@@ -18,27 +18,27 @@ import androidx.compose.ui.graphics.rememberGraphicsLayer
 import kotlinx.coroutines.launch
 
 /**
- * Composable utility that renders [content] into a compositing graphics layer and can
- * capture it into an [ImageBitmap].
+ * A composable function that captures the drawn content of its child composables into a bitmap
+ * when triggered. This allows developers to programmatically generate an `ImageBitmap`
+ * from the rendered UI content.
  *
- * How it works:
- * - We draw the composable's content into a remembered graphics layer using drawWithContent.
- * - We then draw that content normally so it appears on screen.
- * - We can capture the current pixels of that layer via graphicsLayer.toImageBitmap().
- *
- * Behavior:
- * - If [autoCapture] is true, it will capture once on first composition and invoke [onBitmap].
- * - It also supports manual capture by tapping the content (clickable), which will invoke [onBitmap].
+ * @param modifier A [Modifier] instance to apply to this composable for layout or styling configurations.
+ * @param capture A flag to trigger the capture process when set to `true`. The content will be converted
+ *                to a bitmap and passed to the `onBitmap` callback.
+ * @param onBitmap A callback triggered with the generated [ImageBitmap] once the content has been
+ *                 successfully captured.
+ * @param content A lambda expression containing the composable content to be rendered and captured
+ *                into the output bitmap.
  */
 @Composable
 fun CaptureToBitmap(
     modifier: Modifier = Modifier,
+    capture: Boolean = false,
     onBitmap: (ImageBitmap) -> Unit,
     content: @Composable () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val graphicsLayer = rememberGraphicsLayer()
-
     Box(
         modifier = modifier
             .drawWithContent {
@@ -47,14 +47,16 @@ fun CaptureToBitmap(
                     this@drawWithContent.drawContent()
                 }
             }
-            .clickable {
+            .background(Color.Transparent)
+    ) {
+        LaunchedEffect(capture) {
+            if (capture) {
                 coroutineScope.launch {
                     val bitmap = graphicsLayer.toImageBitmap()
                     onBitmap(bitmap)
                 }
             }
-            .background(Color.Transparent)
-    ) {
+        }
         content()
     }
 }
