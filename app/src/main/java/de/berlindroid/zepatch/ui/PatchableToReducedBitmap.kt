@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -31,11 +30,12 @@ import kotlinx.coroutines.launch
 fun PatchableToReducedBitmap(
     modifier: Modifier = Modifier,
     image: ImageBitmap? = null,
+    colorCount: Int = 3,
     onReducedBitmap: (ImageBitmap) -> Unit = {},
+    onColorCountChanged: (Int) -> Unit = {}
 ) {
 
     var reducedImage by remember { mutableStateOf<ImageBitmap?>(null) }
-    var colorCount by remember { mutableIntStateOf(3) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -65,7 +65,7 @@ fun PatchableToReducedBitmap(
             value = "$colorCount",
             onValueChange = {
                 if (it.isNotBlank() && it.isDigitsOnly()) {
-                    colorCount = it.toInt()
+                    onColorCountChanged(it.toInt())
                 } else {
                     colorCount
                 }

@@ -41,6 +41,7 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -176,6 +177,7 @@ private fun PatchableDetail(
 ) {
     var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
     var reducedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var colorCount by remember { mutableIntStateOf(3) }
 
     Scaffold(
         modifier = modifier,
@@ -235,6 +237,8 @@ private fun PatchableDetail(
 
                 REDUCED_BITMAP -> PatchableToReducedBitmap(
                     image = imageBitmap,
+                    colorCount = colorCount,
+                    onColorCountChanged = { count -> colorCount = count },
                     onReducedBitmap = { img -> reducedImageBitmap = img },
                 )
 
