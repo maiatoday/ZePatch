@@ -24,6 +24,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.graphics.scale
 import androidx.core.text.isDigitsOnly
 import androidx.compose.ui.tooling.preview.Preview
+import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.reduceColors
 import kotlinx.coroutines.launch
 
@@ -37,6 +38,7 @@ fun PatchableToReducedBitmap(
 ) {
 
     var reducedImage by remember { mutableStateOf<ImageBitmap?>(null) }
+    var reducedHistogram by remember { mutableStateOf<Histogram?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -48,16 +50,18 @@ fun PatchableToReducedBitmap(
             )
         }
         Button(onClick = {
-            // TODO: PARRALELEIZE & VMIZE
+            // TODO: VMIZE
             coroutineScope.launch {
                 reducedImage = null
                 image?.let {
                     val aspect = it.width / it.height.toFloat()
-                    reducedImage = it.asAndroidBitmap()
+                    val (bitmap, histogram) = it.asAndroidBitmap()
                         .copy(Bitmap.Config.ARGB_8888, false)
                         .scale((512 * aspect).toInt(), 512, false)
                         .reduceColors(colorCount)
-                        .asImageBitmap()
+
+                    reducedImage = bitmap.asImageBitmap()
+                    reducedHistogram = histogram
                 }
             }
         }) { Text("Do it") }

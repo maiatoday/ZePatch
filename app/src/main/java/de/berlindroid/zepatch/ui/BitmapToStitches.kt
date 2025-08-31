@@ -31,6 +31,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.graphics.scale
+import com.embroidermodder.punching.Histogram
+import com.embroidermodder.punching.colorHistogram
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.stiches.StitchToPES.createEmbroideryFromBitmap
 import kotlinx.coroutines.launch
@@ -40,6 +42,7 @@ import kotlinx.coroutines.launch
 fun BitmapToStitches(
     modifier: Modifier = Modifier,
     reducedImageBitmap: ImageBitmap? = null,
+    reducedHistogram: Histogram,
     name: String
 ) {
     val context = LocalContext.current
@@ -68,9 +71,11 @@ fun BitmapToStitches(
                     val embroidery = createEmbroideryFromBitmap(
                         name,
                         bitmap = it.asAndroidBitmap(),
-                        mmWidth = 30f * aspect,
-                        mmHeight = 30f,
-                        mmDensity = 0.5f
+                        histogram = reducedHistogram,
+                        mmWidth = 500f * aspect,
+                        mmHeight = 500f,
+                        mmDensityX = 4f,
+                        mmDensityY = 2f,
                     )
 
                     val pes = StitchToPES.convert(context, embroidery)
@@ -92,7 +97,6 @@ fun BitmapToStitches(
                     }
                 }
             }
-
         }) { Text("Do it") }  // Compose the content through the composable utility; it will invoke the callback when ready.
 
         displayImage?.let {
@@ -168,6 +172,11 @@ private fun savePesAfterSelection(context: Context, result: ActivityResult, byte
 @Composable
 fun BitmapToStitchesPreview() {
     val imageBitmap = ImageBitmap(width = 100, height = 100) // Replace with a real ImageBitmap if needed
-    BitmapToStitches(reducedImageBitmap = imageBitmap, name = "MyPatch")
+    val histogram = imageBitmap.asAndroidBitmap().colorHistogram()
+    BitmapToStitches(
+        reducedImageBitmap = imageBitmap,
+        reducedHistogram = histogram,
+        name = "MyPatch"
+    )
 }
 
