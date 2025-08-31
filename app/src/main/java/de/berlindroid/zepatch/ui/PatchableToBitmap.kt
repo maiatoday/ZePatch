@@ -1,7 +1,6 @@
 package de.berlindroid.zepatch.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
@@ -23,6 +22,7 @@ import de.berlindroid.zepatch.utils.CaptureToBitmap
 @Composable
 fun PatchableToBitmap(
     modifier: Modifier = Modifier,
+    onBitmap: (ImageBitmap) -> Unit = {},
     patchable: @Composable () -> Unit,
 ) {
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
@@ -50,6 +50,7 @@ fun PatchableToBitmap(
                 contentDescription = "patch bitmap",
                 modifier = Modifier.fillMaxWidth()
             )
+            onBitmap(it)
         } ?: CircularProgressIndicator()
 
     }

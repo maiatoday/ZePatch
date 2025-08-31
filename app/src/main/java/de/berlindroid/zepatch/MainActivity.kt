@@ -46,6 +46,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import de.berlindroid.zepatch.PatchablePreviewMode.*
@@ -173,6 +174,9 @@ private fun PatchableDetail(
     onBackClick: () -> Unit,
     patchable: @Composable () -> Unit,
 ) {
+    var imageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+    var reducedImageBitmap by remember { mutableStateOf<ImageBitmap?>(null) }
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -224,13 +228,20 @@ private fun PatchableDetail(
             when (currentMode) {
                 COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
 
-                BITMAP -> PatchableToBitmap(patchable = patchable)
-
-                REDUCED_BITMAP -> PatchableToReducedBitmap(
+                BITMAP -> PatchableToBitmap(
+                    onBitmap = { img -> imageBitmap = img },
                     patchable = patchable
                 )
 
-                STITCHES -> BitmapToStitches(patchable = patchable, name = name)
+                REDUCED_BITMAP -> PatchableToReducedBitmap(
+                    image = imageBitmap,
+                    onReducedBitmap = { img -> reducedImageBitmap = img },
+                )
+
+                STITCHES -> BitmapToStitches(
+                    reducedImageBitmap = reducedImageBitmap,
+                    name = name
+                )
             }
         }
     }
