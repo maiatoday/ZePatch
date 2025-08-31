@@ -28,11 +28,14 @@ import androidx.compose.ui.unit.sp
 import de.berlindroid.zepatch.R
 import de.berlindroid.zepatch.annotations.Patch
 import de.berlindroid.zepatch.ui.SafeArea
+import nstv.design.theme.SheepColor
+import nstv.sheep.model.Sheep
+
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Patch("Logo")
+@Patch("AppLogo")
 @Composable
-fun Logo() {
+fun AppLogo() {
     SafeArea {
         Image(
             modifier = Modifier.size(200.dp),
@@ -41,6 +44,49 @@ fun Logo() {
         )
     }
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Patch("BerlindroidLogo")
+@Composable
+fun BerlindroidLogo() {
+    SafeArea {
+        Image(
+            modifier = Modifier.size(200.dp),
+            painter = painterResource(R.drawable.voltron_nosign),
+            contentDescription = null
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Patch("GoogleLogo")
+@Composable
+fun GoogleLogo() {
+    SafeArea {
+        Image(
+            modifier = Modifier.size(200.dp),
+            painter = painterResource(R.drawable.g),
+            contentDescription = null
+        )
+    }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Patch("Android")
+@Composable
+fun AndroidLogo() {
+    SafeArea {
+        Image(
+            modifier = Modifier.size(200.dp),
+            painter = painterResource(R.drawable.andriod),
+            contentDescription = null
+        )
+    }
+}
+
 
 @Patch("AndyA")
 @Composable
@@ -124,7 +170,7 @@ fun AndyB() {
     }
 }
 
-@Patch("💪")
+@Patch("flex")
 @Composable
 fun Emoji() {
     SafeArea {
