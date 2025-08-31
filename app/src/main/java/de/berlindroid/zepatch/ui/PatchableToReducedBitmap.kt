@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.graphics.scale
 import androidx.core.text.isDigitsOnly
 import com.embroidermodder.punching.reduceColors
+import kotlinx.coroutines.launch
 
 @Composable
 fun PatchableToReducedBitmap(
@@ -34,6 +36,7 @@ fun PatchableToReducedBitmap(
 
     var reducedImage by remember { mutableStateOf<ImageBitmap?>(null) }
     var colorCount by remember { mutableIntStateOf(3) }
+    val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxWidth()) {
         image?.let {
@@ -45,14 +48,16 @@ fun PatchableToReducedBitmap(
         }
         Button(onClick = {
             // TODO: PARRALELEIZE & VMIZE
-            reducedImage = null
-            image?.let {
-                val aspect = it.width / it.height.toFloat()
-                reducedImage = it.asAndroidBitmap()
-                    .copy(Bitmap.Config.ARGB_8888, false)
-                    .scale((512 * aspect).toInt(), 512, false)
-                    .reduceColors(colorCount)
-                    .asImageBitmap()
+            coroutineScope.launch {
+                reducedImage = null
+                image?.let {
+                    val aspect = it.width / it.height.toFloat()
+                    reducedImage = it.asAndroidBitmap()
+                        .copy(Bitmap.Config.ARGB_8888, false)
+                        .scale((512 * aspect).toInt(), 512, false)
+                        .reduceColors(colorCount)
+                        .asImageBitmap()
+                }
             }
         }) { Text("Do it") }
 

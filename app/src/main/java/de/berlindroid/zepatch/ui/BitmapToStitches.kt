@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -31,7 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.core.graphics.scale
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.stiches.StitchToPES.createEmbroideryFromBitmap
-
+import kotlinx.coroutines.launch
 
 @Composable
 fun BitmapToStitches(
@@ -42,6 +43,7 @@ fun BitmapToStitches(
     val context = LocalContext.current
     var bytes by remember { mutableStateOf<ByteArray?>(null) }
     var displayImage by remember { mutableStateOf<ImageBitmap?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -58,32 +60,34 @@ fun BitmapToStitches(
             )
         }
         Button(onClick = {
-            reducedImageBitmap?.let {
-                val aspect = it.width / it.height.toFloat()
-                val embroidery = createEmbroideryFromBitmap(
-                    name,
-                    bitmap = it.asAndroidBitmap(),
-                    mmWidth = 30f * aspect,
-                    mmHeight = 30f,
-                    mmDensity = 0.5f
-                )
+            coroutineScope.launch {
+                reducedImageBitmap?.let {
+                    val aspect = it.width / it.height.toFloat()
+                    val embroidery = createEmbroideryFromBitmap(
+                        name,
+                        bitmap = it.asAndroidBitmap(),
+                        mmWidth = 30f * aspect,
+                        mmHeight = 30f,
+                        mmDensity = 0.5f
+                    )
 
-                val pes = StitchToPES.convert(context, embroidery)
-                if (pes == null || pes.isEmpty()) {
-                    Log.e("EMBNO", "No pes found.")
-                } else {
-                    bytes = pes
-                }
+                    val pes = StitchToPES.convert(context, embroidery)
+                    if (pes == null || pes.isEmpty()) {
+                        Log.e("EMBNO", "No pes found.")
+                    } else {
+                        bytes = pes
+                    }
 
-                val png = StitchToPES.convert(context, embroidery, "png")
-                if (png == null || png.isEmpty()) {
-                    Log.e("PNGNO", "No png returned.")
-                } else {
-                    val decoded = BitmapFactory.decodeByteArray(png, 0, png.size)
+                    val png = StitchToPES.convert(context, embroidery, "png")
+                    if (png == null || png.isEmpty()) {
+                        Log.e("PNGNO", "No png returned.")
+                    } else {
+                        val decoded = BitmapFactory.decodeByteArray(png, 0, png.size)
 
-                    displayImage = decoded
-                        .scale(decoded.width * 2, decoded.height * 2)
-                        .asImageBitmap()
+                        displayImage = decoded
+                            .scale(decoded.width * 2, decoded.height * 2)
+                            .asImageBitmap()
+                    }
                 }
             }
 
@@ -123,7 +127,6 @@ fun BitmapToStitches(
         }
     }
 }
-
 
 private fun savePesAfterSelection(context: Context, result: ActivityResult, bytes: ByteArray?) {
     // TODO MOVE ME INTO VM
