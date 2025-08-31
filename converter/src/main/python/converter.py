@@ -35,7 +35,7 @@ def convert(embroidery, file_format="pes"):
     filename = join(os.environ["HOME"], f"{name}-{stitches}.{file_format}")
 
     print(f"Saving to '{filename}'.")
-    if file_format == "pes":
+    if file_format == "png":
         settings = {"fancy": "true"}
     else:
         settings = None

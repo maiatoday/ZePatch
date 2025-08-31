@@ -28,8 +28,6 @@ import androidx.compose.ui.unit.sp
 import de.berlindroid.zepatch.R
 import de.berlindroid.zepatch.annotations.Patch
 import de.berlindroid.zepatch.ui.SafeArea
-import nstv.design.theme.SheepColor
-import nstv.sheep.model.Sheep
 
 
 @OptIn(ExperimentalMaterial3Api::class)
