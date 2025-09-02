@@ -26,20 +26,20 @@ fun PatchableToBitmap(
     patchable: @Composable () -> Unit,
 ) {
     var image by remember { mutableStateOf<ImageBitmap?>(null) }
-    var capture by remember { mutableStateOf(false) }
+    var shouldCapture by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
         Button(onClick = {
             image = null
-            capture = true
+            shouldCapture = true
         }) { Text("Do it") }
         // Compose the content through the composable utility; it will invoke the callback when ready.
         CaptureToBitmap(
             modifier = Modifier.fillMaxWidth(),
-            capture = capture,
+            shouldCapture = shouldCapture,
             onBitmap = { img ->
                 image = img
-                capture = false
+                shouldCapture = false
             },
             content = patchable
         )

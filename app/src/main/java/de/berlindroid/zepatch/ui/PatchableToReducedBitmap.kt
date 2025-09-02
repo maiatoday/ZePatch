@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.graphics.scale
 import androidx.core.text.isDigitsOnly
+import androidx.compose.ui.tooling.preview.Preview
 import com.embroidermodder.punching.reduceColors
 import kotlinx.coroutines.launch
 
@@ -88,10 +89,15 @@ fun PatchableToReducedBitmap(
     }
 }
 
+@Preview
+@Composable
+fun PatchableToReducedBitmapPreview() {
+    PatchableToReducedBitmap(
+        image = ImageBitmap(width = 100, height = 100), // Example ImageBitmap
+        colorCount = 5,
+        onReducedBitmap = {},
+        onColorCountChanged = {}
+    )
+}
 
-//@Preview(showBackground = true)
-//@Composable
-//private fun PatchableToReducedBitmapPreview() {
-//    PatchableToReducedBitmap()
-//
-//}
+

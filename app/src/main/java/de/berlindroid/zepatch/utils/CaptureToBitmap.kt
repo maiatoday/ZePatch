@@ -1,15 +1,10 @@
 package de.berlindroid.zepatch.utils
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
@@ -23,7 +18,7 @@ import kotlinx.coroutines.launch
  * from the rendered UI content.
  *
  * @param modifier A [Modifier] instance to apply to this composable for layout or styling configurations.
- * @param capture A flag to trigger the capture process when set to `true`. The content will be converted
+ * @param shouldCapture A flag to trigger the capture process when set to `true`. The content will be converted
  *                to a bitmap and passed to the `onBitmap` callback.
  * @param onBitmap A callback triggered with the generated [ImageBitmap] once the content has been
  *                 successfully captured.
@@ -33,7 +28,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun CaptureToBitmap(
     modifier: Modifier = Modifier,
-    capture: Boolean = false,
+    shouldCapture: Boolean = false,
     onBitmap: (ImageBitmap) -> Unit,
     content: @Composable () -> Unit,
 ) {
@@ -49,8 +44,8 @@ fun CaptureToBitmap(
             }
             .background(Color.Transparent)
     ) {
-        LaunchedEffect(capture) {
-            if (capture) {
+        LaunchedEffect(shouldCapture) {
+            if (shouldCapture) {
                 coroutineScope.launch {
                     val bitmap = graphicsLayer.toImageBitmap()
                     onBitmap(bitmap)

@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.graphics.scale
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.stiches.StitchToPES.createEmbroideryFromBitmap
@@ -162,21 +163,10 @@ private fun savePesAfterSelection(context: Context, result: ActivityResult, byte
     }
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//private fun BitmapToStitchesPreview() {
-//    BitmapToStitches(Modifier, "Demo") {
-//        Box(
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .background(Color.Blue)
-//        ) {
-//            Text(
-//                "Preview Content",
-//                modifier = Modifier.padding(16.dp),
-//                color = Color.White
-//            )
-//        }
-//    }
-//}
+@Preview
+@Composable
+fun BitmapToStitchesPreview() {
+    val imageBitmap = ImageBitmap(width = 100, height = 100) // Replace with a real ImageBitmap if needed
+    BitmapToStitches(reducedImageBitmap = imageBitmap, name = "MyPatch")
+}
 
