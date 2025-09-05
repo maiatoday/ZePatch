@@ -4,5 +4,5 @@ fun String.uppercaseWords() =
     replace("_", " ")
         .split(" ")
         .joinToString(separator = " ") {
-            first().uppercase() + drop(1).lowercase()
+            it.first().uppercase() + it.drop(1).lowercase()
         }
