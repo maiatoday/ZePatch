@@ -24,7 +24,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.graphics.scale
 import androidx.core.text.isDigitsOnly
 import androidx.compose.ui.tooling.preview.Preview
+import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.reduceColors
+import de.berlindroid.zepatch.utils.multiLet
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
@@ -32,11 +35,12 @@ fun PatchableToReducedBitmap(
     modifier: Modifier = Modifier,
     image: ImageBitmap? = null,
     colorCount: Int = 3,
-    onReducedBitmap: (ImageBitmap) -> Unit = {},
+    onReduced: (ImageBitmap, Histogram) -> Unit = { _, _ -> },
     onColorCountChanged: (Int) -> Unit = {}
 ) {
 
     var reducedImage by remember { mutableStateOf<ImageBitmap?>(null) }
+    var reducedHistogram by remember { mutableStateOf<Histogram?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -48,16 +52,18 @@ fun PatchableToReducedBitmap(
             )
         }
         Button(onClick = {
-            // TODO: PARRALELEIZE & VMIZE
-            coroutineScope.launch {
+            // TODO: VMIZE
+            coroutineScope.launch(Dispatchers.IO) {
                 reducedImage = null
                 image?.let {
                     val aspect = it.width / it.height.toFloat()
-                    reducedImage = it.asAndroidBitmap()
+                    val (bitmap, histogram) = it.asAndroidBitmap()
                         .copy(Bitmap.Config.ARGB_8888, false)
                         .scale((512 * aspect).toInt(), 512, false)
                         .reduceColors(colorCount)
-                        .asImageBitmap()
+
+                    reducedImage = bitmap.asImageBitmap()
+                    reducedHistogram = histogram
                 }
             }
         }) { Text("Do it") }
@@ -78,13 +84,13 @@ fun PatchableToReducedBitmap(
             )
         )
 
-        reducedImage?.let {
+        reducedImage?.multiLet(reducedHistogram) { image, histogram ->
             Image(
-                bitmap = it,
+                bitmap = image,
                 contentDescription = "patch bitmap",
                 modifier = Modifier.fillMaxWidth()
             )
-            onReducedBitmap(it)
+            onReduced(image, histogram)
         } ?: CircularProgressIndicator()
     }
 }
@@ -95,7 +101,7 @@ fun PatchableToReducedBitmapPreview() {
     PatchableToReducedBitmap(
         image = ImageBitmap(width = 100, height = 100), // Example ImageBitmap
         colorCount = 5,
-        onReducedBitmap = {},
+        onReduced = { _, _ -> },
         onColorCountChanged = {}
     )
 }

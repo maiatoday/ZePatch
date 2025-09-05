@@ -17,7 +17,10 @@ data class Histogram(
     val spread: Map<Color, Amount>
 )
 
-fun Histogram.hasAlpha(): Boolean = spread.keys.firstOrNull {
+val Histogram.colors : Set<Color>
+    get() = spread.keys
+
+fun Histogram.hasAlpha(): Boolean = colors.firstOrNull {
     it.alpha < 0xff
 } != null
 
@@ -41,13 +44,13 @@ fun Bitmap.colorHistogram(): Histogram {
     )
 }
 
-fun Bitmap.reduceColors(maxColorCounta: Int): Bitmap {
+fun Bitmap.reduceColors(maxColorCounts: Int): Pair<Bitmap, Histogram> {
     var histogram = colorHistogram().mergeSimilarColors().removeLowCounts()
     val hasAlpha = histogram.hasAlpha()
-    val desiredColorCount = (if (hasAlpha) 1 else 0) + maxColorCounta
+    val desiredColorCount = (if (hasAlpha) 1 else 0) + maxColorCounts
 
     var maxTries = 3
-    while (histogram.spread.size > desiredColorCount && maxTries > 0) {
+    while (histogram.colors.size > desiredColorCount && maxTries > 0) {
         histogram = histogram.mergeSimilarColors().removeLowCounts()
         maxTries--
     }
@@ -55,29 +58,32 @@ fun Bitmap.reduceColors(maxColorCounta: Int): Bitmap {
     maxTries = 3
     var currentDistance = 50
     // reduce more aggressively
-    while (histogram.spread.size > desiredColorCount && maxTries > 0) {
+    while (histogram.colors.size > desiredColorCount && maxTries > 0) {
         histogram = histogram.mergeSimilarColors(currentDistance).removeLowCounts()
         currentDistance = (currentDistance * 1.25f).toInt()
         maxTries--
     } // todo if not reject and give up
 
-    val topN = histogram
-        .spread
-        .toList()
-        .sortedByDescending { it.second }
-        .take(desiredColorCount)
-        .map { it.first }
-        .toMutableList()
+    histogram = Histogram(
+        spread = histogram
+            .spread
+            .toList()
+            .sortedByDescending { it.second }
+            .take(desiredColorCount)
+            .toMap()
+    )
+
+    val topColors = histogram.colors.toList()
 
     val pixels = IntArray(width * height)
     getPixels(pixels, 0, width, 0, 0, width, height)
-    val newPixels = pixels.filteredBy(topN)
+    val newPixels = pixels.filteredBy(topColors)
 
     val result = createBitmap(width, height, config!!).apply {
         setPixels(newPixels, 0, width, 0, 0, width, height)
     }
 
-    return result
+    return result to histogram
 }
 
 fun Histogram.mergeSimilarColors(distance: Int = 25): Histogram {
@@ -118,11 +124,11 @@ fun Histogram.removeLowCounts(threshold: Int = 25): Histogram {
         if (keep) {
             result[e.key] = e.value
         } else {
-            removedCount ++
+            removedCount++
         }
     }
 
-    Log.i("HISTOGRAM","Removed $removedCount colors from histogram.")
+    Log.i("HISTOGRAM", "Removed $removedCount colors from histogram.")
     return Histogram(result)
 }
 
@@ -159,3 +165,7 @@ private fun distance(a: Int, b: Int): Float {
         ColorUtils.distanceEuclidean(aLAB, bLAB).toFloat()
     }
 }
+
+
+val Bitmap.aspectRatio: Float
+    get() = width.toFloat() / height

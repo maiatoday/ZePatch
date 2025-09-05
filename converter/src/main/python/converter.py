@@ -21,8 +21,8 @@ def convert(embroidery, file_format="pes"):
         pattern.color_change(0, 0)
 
         for stitch in thread.getStitches():
-            x = int(stitch.getX() * 10) # pystitch uses 1/10 mm as unit
-            y = int(stitch.getY() * 10)
+            x = stitch.getX()
+            y = stitch.getY()
 
             if thread.getAbsolute():
                 pattern.add_stitch_absolute(STITCH, x,y)
@@ -35,7 +35,7 @@ def convert(embroidery, file_format="pes"):
     filename = join(os.environ["HOME"], f"{name}-{stitches}.{file_format}")
 
     print(f"Saving to '{filename}'.")
-    if file_format == "pes":
+    if file_format == "png":
         settings = {"fancy": "true"}
     else:
         settings = None
