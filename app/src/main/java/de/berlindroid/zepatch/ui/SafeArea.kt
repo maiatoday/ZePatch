@@ -1,5 +1,6 @@
 package de.berlindroid.zepatch.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -37,7 +38,9 @@ fun SafeArea(
                 graphicsLayer.record {
                     this@drawWithContent.drawContent()
                 }
-            },
+                drawContent()
+            }
+            .background(Color.Transparent),
     ) {
         LaunchedEffect(shouldCapture) {
             if (shouldCapture) {
