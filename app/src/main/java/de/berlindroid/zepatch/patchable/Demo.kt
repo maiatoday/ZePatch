@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -89,28 +88,28 @@ fun AndroidLogo() {
 @Patch("AndyA")
 @Composable
 fun AndyA() {
-    SafeArea(
-        modifier = Modifier
-            .size(200.dp)
-            .background(
-                brush = Brush.linearGradient(
-                    colors = listOf(
-                        Color.Red,
-                        Color.Yellow,
-                        Color.Green,
-                        Color.Blue,
-                        Color.Cyan
+    SafeArea {
+        Column(
+            modifier = Modifier
+                .size(200.dp)
+                .background(
+                    brush = Brush.linearGradient(
+                        colors = listOf(
+                            Color.Red,
+                            Color.Yellow,
+                            Color.Green,
+                            Color.Blue,
+                            Color.Cyan
+                        )
+                    ),
+                    shape = RoundedCornerShape(
+                        topStartPercent = 50,
+                        topEndPercent = 50,
+                        bottomStartPercent = 50,
+                        bottomEndPercent = 0
                     )
                 ),
-                shape = RoundedCornerShape(
-                    topStartPercent = 50,
-                    topEndPercent = 50,
-                    bottomStartPercent = 50,
-                    bottomEndPercent = 0
-                )
-            ),
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        ) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -129,28 +128,28 @@ fun AndyA() {
 @Patch("AndyB")
 @Composable
 fun AndyB() {
-    SafeArea(
-        modifier = Modifier
-            .size(200.dp)
-            .background(
-                color = Color.White,
-                shape = RoundedCornerShape(
-                    topStartPercent = 0,
-                    topEndPercent = 50,
-                    bottomStartPercent = 50,
-                    bottomEndPercent = 50
+    SafeArea {
+        Column(
+            modifier = Modifier
+                .size(200.dp)
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(
+                        topStartPercent = 0,
+                        topEndPercent = 50,
+                        bottomStartPercent = 50,
+                        bottomEndPercent = 50
+                    )
                 )
-            )
-            .border(
-                12.dp, Color.Black, RoundedCornerShape(
-                    topStartPercent = 0,
-                    topEndPercent = 50,
-                    bottomStartPercent = 50,
-                    bottomEndPercent = 50
-                )
-            ),
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+                .border(
+                    12.dp, Color.Black, RoundedCornerShape(
+                        topStartPercent = 0,
+                        topEndPercent = 50,
+                        bottomStartPercent = 50,
+                        bottomEndPercent = 50
+                    )
+                ),
+        ) {
             Spacer(modifier = Modifier.weight(1f))
             Text(
                 modifier = Modifier.fillMaxWidth(),
@@ -161,7 +160,7 @@ fun AndyB() {
                 style = TextStyle.Default.copy(shadow = Shadow(blurRadius = 12f)),
                 color = Color.Black,
                 text = "Andy",
-                letterSpacing = -1.sp
+                letterSpacing = (-1).sp
             )
             Spacer(modifier = Modifier.weight(1f))
         }
