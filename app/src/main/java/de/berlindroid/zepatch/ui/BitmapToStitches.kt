@@ -2,7 +2,6 @@ package de.berlindroid.zepatch.ui
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
@@ -11,15 +10,18 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -27,21 +29,22 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.graphics.scale
-import com.embroidermodder.punching.reduceColors
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.stiches.StitchToPES.createEmbroideryFromBitmap
-import de.berlindroid.zepatch.utils.CaptureToBitmap
-
+import kotlinx.coroutines.launch
 
 @Composable
 fun BitmapToStitches(
     modifier: Modifier = Modifier,
-    name: String,
-    patchable: @Composable () -> Unit,
+    reducedImageBitmap: ImageBitmap? = null,
+    name: String
 ) {
     val context = LocalContext.current
     var bytes by remember { mutableStateOf<ByteArray?>(null) }
+    var displayImage by remember { mutableStateOf<ImageBitmap?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -49,52 +52,49 @@ fun BitmapToStitches(
         savePesAfterSelection(context, result, bytes)
     }
 
-    var image by remember { mutableStateOf<ImageBitmap?>(null) }
+    Column(modifier = modifier.fillMaxWidth()) {
+        reducedImageBitmap?.let {
+            Image(
+                bitmap = it,
+                contentDescription = "patch bitmap",
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        Button(onClick = {
+            coroutineScope.launch {
+                reducedImageBitmap?.let {
+                    val aspect = it.width / it.height.toFloat()
+                    val embroidery = createEmbroideryFromBitmap(
+                        name,
+                        bitmap = it.asAndroidBitmap(),
+                        mmWidth = 30f * aspect,
+                        mmHeight = 30f,
+                        mmDensity = 0.5f
+                    )
 
-    Box(modifier = modifier.fillMaxWidth()) {
-        // Compose the content through the composable utility; it will invoke the callback when ready.
-        CaptureToBitmap(
-            modifier = Modifier.fillMaxWidth(),
-            onBitmap = { img ->
-                // TODO: PARRALELEIZE & VMIZE
-                val aspect = img.width / img.height.toFloat()
+                    val pes = StitchToPES.convert(context, embroidery)
+                    if (pes == null || pes.isEmpty()) {
+                        Log.e("EMBNO", "No pes found.")
+                    } else {
+                        bytes = pes
+                    }
 
-                val reduced =
-                    img.asAndroidBitmap()
-                        .copy(Bitmap.Config.ARGB_8888, false)
-                        .scale((512 * aspect).toInt(), 512, false)
-                        .reduceColors(3) // TODO UI For color count selection
+                    val png = StitchToPES.convert(context, embroidery, "png")
+                    if (png == null || png.isEmpty()) {
+                        Log.e("PNGNO", "No png returned.")
+                    } else {
+                        val decoded = BitmapFactory.decodeByteArray(png, 0, png.size)
 
-                val embroidery = createEmbroideryFromBitmap(
-                    name,
-                    reduced,
-                    mmWidth = 30f * aspect,
-                    mmHeight = 30f,
-                    mmDensity = 0.5f
-                )
-
-                val pes = StitchToPES.convert(context, embroidery)
-                if (pes == null || pes.isEmpty()) {
-                    Log.e("EMBNO", "No pes found.")
-                } else {
-                    bytes = pes
+                        displayImage = decoded
+                            .scale(decoded.width * 2, decoded.height * 2)
+                            .asImageBitmap()
+                    }
                 }
+            }
 
-                val png = StitchToPES.convert(context, embroidery, "png")
-                if (png == null || png.isEmpty()) {
-                    Log.e("PNGNO", "No png returned.")
-                } else {
-                    val decoded = BitmapFactory.decodeByteArray(png, 0, png.size)
+        }) { Text("Do it") }  // Compose the content through the composable utility; it will invoke the callback when ready.
 
-                    image = decoded
-                        .scale(decoded.width * 2, decoded.height * 2)
-                        .asImageBitmap()
-                }
-            },
-            content = patchable
-        )
-
-        image?.let {
+        displayImage?.let {
             Image(
                 bitmap = it,
                 contentDescription = "patch bitmap",
@@ -129,7 +129,6 @@ fun BitmapToStitches(
     }
 }
 
-
 private fun savePesAfterSelection(context: Context, result: ActivityResult, bytes: ByteArray?) {
     // TODO MOVE ME INTO VM
 
@@ -162,5 +161,12 @@ private fun savePesAfterSelection(context: Context, result: ActivityResult, byte
             ).show()
         }
     }
+}
+
+@Preview
+@Composable
+fun BitmapToStitchesPreview() {
+    val imageBitmap = ImageBitmap(width = 100, height = 100) // Replace with a real ImageBitmap if needed
+    BitmapToStitches(reducedImageBitmap = imageBitmap, name = "MyPatch")
 }
 
