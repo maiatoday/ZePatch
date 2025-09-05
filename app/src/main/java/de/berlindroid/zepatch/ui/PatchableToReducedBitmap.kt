@@ -35,7 +35,7 @@ fun PatchableToReducedBitmap(
     modifier: Modifier = Modifier,
     image: ImageBitmap? = null,
     colorCount: Int = 3,
-    onReducedBitmap: (ImageBitmap) -> Unit = {},
+    onReduced: (ImageBitmap, Histogram) -> Unit = { _, _ -> },
     onColorCountChanged: (Int) -> Unit = {}
 ) {
 
@@ -84,13 +84,13 @@ fun PatchableToReducedBitmap(
             )
         )
 
-        reducedImage?.let {
+        reducedImage?.multiLet(reducedHistogram) { image, histogram ->
             Image(
-                bitmap = it,
+                bitmap = image,
                 contentDescription = "patch bitmap",
                 modifier = Modifier.fillMaxWidth()
             )
-            onReducedBitmap(it)
+            onReduced(image, histogram)
         } ?: CircularProgressIndicator()
     }
 }
@@ -101,7 +101,7 @@ fun PatchableToReducedBitmapPreview() {
     PatchableToReducedBitmap(
         image = ImageBitmap(width = 100, height = 100), // Example ImageBitmap
         colorCount = 5,
-        onReducedBitmap = {},
+        onReduced = { _, _ -> },
         onColorCountChanged = {}
     )
 }
