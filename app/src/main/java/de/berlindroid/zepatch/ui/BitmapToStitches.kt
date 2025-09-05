@@ -35,6 +35,8 @@ import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.colorHistogram
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.stiches.StitchToPES.createEmbroideryFromBitmap
+import de.berlindroid.zepatch.utils.multiLet
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
@@ -45,6 +47,7 @@ fun BitmapToStitches(
     reducedHistogram: Histogram,
     name: String
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var bytes by remember { mutableStateOf<ByteArray?>(null) }
     var displayImage by remember { mutableStateOf<ImageBitmap?>(null) }

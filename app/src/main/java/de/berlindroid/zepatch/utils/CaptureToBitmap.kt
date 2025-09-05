@@ -10,6 +10,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 /**
@@ -46,7 +47,7 @@ fun CaptureToBitmap(
     ) {
         LaunchedEffect(shouldCapture) {
             if (shouldCapture) {
-                coroutineScope.launch {
+                coroutineScope.launch(Dispatchers.IO) {
                     val bitmap = graphicsLayer.toImageBitmap()
                     onBitmap(bitmap)
                 }

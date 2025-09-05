@@ -26,6 +26,8 @@ import androidx.core.text.isDigitsOnly
 import androidx.compose.ui.tooling.preview.Preview
 import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.reduceColors
+import de.berlindroid.zepatch.utils.multiLet
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
@@ -51,7 +53,7 @@ fun PatchableToReducedBitmap(
         }
         Button(onClick = {
             // TODO: VMIZE
-            coroutineScope.launch {
+            coroutineScope.launch(Dispatchers.IO) {
                 reducedImage = null
                 image?.let {
                     val aspect = it.width / it.height.toFloat()
