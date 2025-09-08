@@ -25,6 +25,7 @@ fun BitmapToStitches(
     creatingEmbroidery: Boolean,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
+            WizardSectionTitle(title = "Generate Stitches", helpText = "Turn the reduced bitmap into an embroidery stitch file and preview the result.")
         Image(
             bitmap = reducedImageBitmap,
             contentDescription = "patch bitmap",
@@ -32,7 +33,7 @@ fun BitmapToStitches(
         )
         Button(onClick = {
             onCreateEmbroidery(name, reducedImageBitmap, reducedHistogram)
-        }) { Text("Do it") }
+        }) { Text("Generate") }
 
         val preview = previewImage
         if (preview != null) {

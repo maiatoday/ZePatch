@@ -40,6 +40,7 @@ fun PatchableToReducedBitmap(
     onColorCountChanged: (Int) -> Unit = {}
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
+            WizardSectionTitle(title = "Reduce Colors", helpText = "Choose the number of colors and generate a simplified bitmap suitable for stitching.")
         image?.let {
             Image(
                 bitmap = it,
@@ -47,7 +48,7 @@ fun PatchableToReducedBitmap(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        Button(onClick = computeReducedBitmap) { Text("Do it") }
+        Button(onClick = computeReducedBitmap) { Text("Reduce") }
 
         TextField(
             value = "$colorCount",

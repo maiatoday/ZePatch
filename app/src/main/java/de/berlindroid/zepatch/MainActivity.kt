@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -231,7 +233,31 @@ private fun PatchableDetail(
         Column(
             modifier = Modifier.padding(innerPadding),
         ) {
-            ProgressPills(uiState.imageBitmap, uiState.reducedImageBitmap, uiState.previewMode)
+            ProgressHeader(
+                            title = name,
+                            imageBitmap = uiState.imageBitmap,
+                            reducedImageBitmap = uiState.reducedImageBitmap,
+                            currentMode = uiState.previewMode,
+                            onPrev = {
+                                viewModel.setPreviewMode(
+                                    when (uiState.previewMode) {
+                                        PatchablePreviewMode.BITMAP -> PatchablePreviewMode.BITMAP
+                                        PatchablePreviewMode.REDUCED_BITMAP -> PatchablePreviewMode.BITMAP
+                                        PatchablePreviewMode.STITCHES -> PatchablePreviewMode.REDUCED_BITMAP
+                                    }
+                                )
+                            },
+                            onNext = {
+                                viewModel.setPreviewMode(
+                                    when (uiState.previewMode) {
+                                        PatchablePreviewMode.BITMAP -> PatchablePreviewMode.REDUCED_BITMAP
+                                        PatchablePreviewMode.REDUCED_BITMAP -> PatchablePreviewMode.STITCHES
+                                        PatchablePreviewMode.STITCHES -> uiState.previewMode
+                                    }
+                                )
+                                if (uiState.previewMode == PatchablePreviewMode.BITMAP) viewModel.computeReducedBitmap()
+                            }
+                        )
 
             WizardContent(
                 uiState.previewMode,
@@ -246,19 +272,19 @@ private fun PatchableDetail(
                 patchable = patchable
             )
 
-            WizardButtons(
-                uiState.previewMode,
-                uiState.imageBitmap,
-                uiState.reducedImageBitmap,
-                uiState.embroideryData,
-                name,
-                launcher
-            ) {
-                viewModel.setPreviewMode(it)
-                if (it == REDUCED_BITMAP) {
-                    viewModel.computeReducedBitmap()
-                }
-            }
+//            WizardButtons(
+//                uiState.previewMode,
+//                uiState.imageBitmap,
+//                uiState.reducedImageBitmap,
+//                uiState.embroideryData,
+//                name,
+//                launcher
+//            ) {
+//                viewModel.setPreviewMode(it)
+//                if (it == REDUCED_BITMAP) {
+//                    viewModel.computeReducedBitmap()
+//                }
+//            }
         }
     }
 }
@@ -282,6 +308,8 @@ private fun WizardContent(
             .padding(16.dp),
         shape = RoundedCornerShape(size = 25.dp),
     ) {
+        val scrollState = androidx.compose.foundation.rememberScrollState()
+        Column(modifier = Modifier.verticalScroll(scrollState).padding(16.dp)) {
         when (currentMode) {
             BITMAP -> PatchableToBitmap(
                 onBitmap = onBitmapUpdated,
@@ -309,11 +337,33 @@ private fun WizardContent(
                 )
             }
         }
+        }
     }
 }
 
 @Composable
-private fun ProgressPills(
+private fun ProgressHeader(
+    title: String,
+    imageBitmap: ImageBitmap?,
+    reducedImageBitmap: ImageBitmap?,
+    currentMode: PatchablePreviewMode,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+) {
+    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+        Button(onClick = onPrev, enabled = currentMode != BITMAP) { Text("Prev") }
+        Text(title)
+        Button(onClick = onNext, enabled = when (currentMode) {
+            BITMAP -> imageBitmap != null
+            REDUCED_BITMAP -> reducedImageBitmap != null
+            STITCHES -> false
+        }) { Text("Next") }
+    }
+    //ProgressPillsInternal(imageBitmap, reducedImageBitmap, currentMode)
+}
+
+@Composable
+private fun ProgressPillsInternal(
     imageBitmap: ImageBitmap?,
     reducedImageBitmap: ImageBitmap?,
     currentMode: PatchablePreviewMode
@@ -340,92 +390,6 @@ private fun ProgressPills(
                 label = { Text(mode.toString().uppercaseWords()) }
             )
 
-        }
-    }
-}
-
-@Composable
-private fun WizardButtons(
-    currentMode: PatchablePreviewMode,
-    imageBitmap: ImageBitmap?,
-    reducedImageBitmap: ImageBitmap?,
-    embroideryData: ByteArray?,
-    name: String,
-    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>,
-    onModeChanged: (PatchablePreviewMode) -> Unit,
-) {
-    // TODO MOVE ME INTO VM
-    val context = LocalContext.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(percent = 50)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 4.dp)
-        ) {
-            Button(
-                onClick = {
-                    onModeChanged(
-                        when (currentMode) {
-                            BITMAP -> BITMAP
-                            REDUCED_BITMAP -> BITMAP
-                            STITCHES -> REDUCED_BITMAP
-                        }
-                    )
-                },
-                enabled = currentMode != BITMAP
-            ) {
-                Text("Back")
-            }
-            Spacer(Modifier.weight(1f))
-            Button(
-                onClick = {
-                    onModeChanged(
-                        when (currentMode) {
-                            BITMAP -> REDUCED_BITMAP
-                            REDUCED_BITMAP -> STITCHES
-                            STITCHES -> currentMode
-                        }
-                    )
-                },
-                enabled = when (currentMode) {
-                    BITMAP -> imageBitmap != null
-                    REDUCED_BITMAP -> reducedImageBitmap != null
-                    STITCHES -> false
-                }
-            ) {
-                Text("Next")
-            }
-            Button(
-                onClick = {
-                    embroideryData?.let { data ->
-                        val magic = String(data.toList().subList(0, 8).toByteArray())
-                        val byteCount = data.size
-                        val kbCount = byteCount / 1024
-                        val mbCount = kbCount / 1024
-
-                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                            type = "application/octet"
-                            addCategory(Intent.CATEGORY_OPENABLE)
-                            putExtra(Intent.EXTRA_TITLE, "$name.pes")
-                        }
-
-                        launcher.launch(intent)
-
-                        Toast.makeText(
-                            context,
-                            "Found $byteCount bytes. ($kbCount KB, $mbCount MB)\nFile magic '$magic'.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                },
-                enabled = currentMode == STITCHES && embroideryData != null
-            ) {
-                Text("Finish")
-            }
         }
     }
 }
