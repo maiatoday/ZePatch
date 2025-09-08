@@ -5,18 +5,25 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.core.text.isDigitsOnly
 
 @Composable
@@ -28,6 +35,16 @@ fun PatchableToReducedBitmap(
     computeReducedBitmap: () -> Unit = {},
     onColorCountChanged: (Int) -> Unit = {}
 ) {
+    // Local text state so users can clear or type partial numbers without snapping back to default
+    var colorText by rememberSaveable { mutableStateOf(colorCount.toString()) }
+
+    // Keep local text in sync if colorCount changes from outside (e.g., recomputations)
+    LaunchedEffect(colorCount) {
+        colorText = colorCount.toString()
+    }
+
+    val focusManager = LocalFocusManager.current
+
     Column(
         modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -45,22 +62,33 @@ fun PatchableToReducedBitmap(
             )
         }
         TextField(
-            value = "$colorCount",
-            onValueChange = {
-                if (it.isNotBlank() && it.isDigitsOnly()) {
-                    onColorCountChanged(it.toInt())
-                } else {
-                    colorCount
+            value = colorText,
+            onValueChange = { new ->
+                // Allow empty and numeric-only input
+                if (new.isEmpty()) {
+                    colorText = ""
+                } else if (new.isDigitsOnly()) {
+                    colorText = new
+                    new.toIntOrNull()?.let { onColorCountChanged(it) }
                 }
+                // ignore non-digit edits
             },
             label = { Text("How many colors do you need?") },
             keyboardOptions = KeyboardOptions.Default.copy(
                 keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Go
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    if (colorText.isNotEmpty()) {
+                        focusManager.clearFocus()
+                        computeReducedBitmap()
+                    }
+                }
             )
         )
 
-        Button(onClick = computeReducedBitmap) { Text("Reduce") }
+        Button(enabled = colorText.isNotEmpty(), onClick = computeReducedBitmap) { Text("Reduce") }
 
         reducedImage?.let {
             Image(
