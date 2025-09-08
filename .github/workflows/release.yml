@@ -1,7 +1,7 @@
 name: Android Build and Publish
 
 env:
-  ZEPATH_PYTHON_PATH: "/usr/bin/python3"
+  ZEPATCH_PYTHON_PATH: "/usr/bin/python3"
 
 permissions:
   contents: write
