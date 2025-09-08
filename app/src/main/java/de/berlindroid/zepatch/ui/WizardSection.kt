@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun WizardSectionTitle(title: String, helpText: String) {
@@ -35,3 +36,10 @@ fun WizardSectionTitle(title: String, helpText: String) {
         )
     }
 }
+
+@Preview
+@Composable
+fun WizardSectionTitlePreview() {
+    WizardSectionTitle(title = "Sample Title", helpText = "This is some sample help text.")
+}
+
