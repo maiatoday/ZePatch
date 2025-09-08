@@ -368,6 +368,7 @@ private fun ProgressHeader(
         Button(onClick = onPrev, enabled = currentMode != BITMAP) { Text("Prev") }
         StepProgressIndicator(
             modifier = Modifier
+                .height(48.dp)
                 .weight(1f)
                 .padding(horizontal = 8.dp),
             totalSteps = 3,

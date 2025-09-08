@@ -70,6 +70,8 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         val state = _uiState.value
         val image = state.imageBitmap ?: return
         val colorCount = state.colorCount
+        _uiState.update { it.copy(reducedImageBitmap = null) }
+
         viewModelScope.launch(Dispatchers.IO) {
             val aspect = image.width / image.height.toFloat()
             val (reducedBmp, histogram) = image.asAndroidBitmap()

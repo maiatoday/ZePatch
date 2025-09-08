@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.tooling.preview.Preview
 
 /**
  * Renders the provided [patchable] into a Bitmap-like [ImageBitmap] and displays it via [Image].
@@ -32,22 +33,24 @@ fun PatchableToBitmap(
     var shouldCapture by remember { mutableStateOf(false) }
 
     Column(
-            modifier = modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            WizardSectionTitle(title = "Generate Bitmap", helpText = "Render your composable into a bitmap. Tap the button to capture the preview.")
-        Button(onClick = {
-            image = null
-            shouldCapture = true
-        }) { Text("Generate Bitmap") }
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        WizardSectionTitle(
+            title = "Generate Bitmap",
+            helpText = "Render your composable into a bitmap. Tap the button to capture the preview."
+        )
 
         // Render the patchable; it will capture via SafeArea when shouldCapture is true
         patchable(shouldCapture) { img ->
             image = img
             shouldCapture = false
         }
-
+        Button(onClick = {
+            image = null
+            shouldCapture = true
+        }) { Text("Generate Bitmap") }
         image?.let {
             Image(
                 bitmap = it,
@@ -56,9 +59,19 @@ fun PatchableToBitmap(
             )
             onBitmap(it)
         } ?: Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            if (shouldCapture) CircularProgressIndicator()
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PatchableToBitmapPreview() {
+    PatchableToBitmap(
+        patchable = { _, _ ->
+            Text("This is a sample patchable content.")
+        }
+    )
 }
 
 

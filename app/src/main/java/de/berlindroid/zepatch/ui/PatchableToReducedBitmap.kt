@@ -1,8 +1,9 @@
 package de.berlindroid.zepatch.ui
 
-import android.graphics.Bitmap
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -10,25 +11,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.core.graphics.scale
-import androidx.core.text.isDigitsOnly
 import androidx.compose.ui.tooling.preview.Preview
-import com.embroidermodder.punching.Histogram
-import com.embroidermodder.punching.reduceColors
-import de.berlindroid.zepatch.utils.multiLet
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import androidx.core.text.isDigitsOnly
 
 @Composable
 fun PatchableToReducedBitmap(
@@ -39,8 +28,15 @@ fun PatchableToReducedBitmap(
     computeReducedBitmap: () -> Unit = {},
     onColorCountChanged: (Int) -> Unit = {}
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-            WizardSectionTitle(title = "Reduce Colors", helpText = "Choose the number of colors and generate a simplified bitmap suitable for stitching.")
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        WizardSectionTitle(
+            title = "Reduce Colors",
+            helpText = "Choose the number of colors and generate a simplified bitmap suitable for stitching."
+        )
         image?.let {
             Image(
                 bitmap = it,
@@ -48,8 +44,6 @@ fun PatchableToReducedBitmap(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        Button(onClick = computeReducedBitmap) { Text("Reduce") }
-
         TextField(
             value = "$colorCount",
             onValueChange = {
@@ -66,6 +60,8 @@ fun PatchableToReducedBitmap(
             )
         )
 
+        Button(onClick = computeReducedBitmap) { Text("Reduce") }
+
         reducedImage?.let {
             Image(
                 bitmap = it,
@@ -76,7 +72,7 @@ fun PatchableToReducedBitmap(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PatchableToReducedBitmapPreview() {
     PatchableToReducedBitmap(
