@@ -62,7 +62,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.embroidermodder.punching.Histogram
 import de.berlindroid.zepatch.PatchablePreviewMode.BITMAP
-import de.berlindroid.zepatch.PatchablePreviewMode.COMPOSABLE
 import de.berlindroid.zepatch.PatchablePreviewMode.REDUCED_BITMAP
 import de.berlindroid.zepatch.PatchablePreviewMode.STITCHES
 import de.berlindroid.zepatch.ui.BitmapToStitches
@@ -76,7 +75,7 @@ import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel as lifecycleViewModel
 
 enum class PatchablePreviewMode {
-    COMPOSABLE, BITMAP, REDUCED_BITMAP, STITCHES
+    BITMAP, REDUCED_BITMAP, STITCHES
 }
 
 @ExperimentalMaterial3Api
@@ -284,8 +283,6 @@ private fun WizardContent(
         shape = RoundedCornerShape(size = 25.dp),
     ) {
         when (currentMode) {
-            COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
-
             BITMAP -> PatchableToBitmap(
                 onBitmap = onBitmapUpdated,
                 patchable = patchable
@@ -334,7 +331,6 @@ private fun ProgressPills(
                     count = PatchablePreviewMode.entries.size,
                 ),
                 enabled = when (mode) {
-                    COMPOSABLE -> true
                     BITMAP -> true
                     REDUCED_BITMAP -> imageBitmap != null
                     STITCHES -> reducedImageBitmap != null
@@ -374,14 +370,13 @@ private fun WizardButtons(
                 onClick = {
                     onModeChanged(
                         when (currentMode) {
-                            COMPOSABLE -> COMPOSABLE
-                            BITMAP -> COMPOSABLE
+                            BITMAP -> BITMAP
                             REDUCED_BITMAP -> BITMAP
                             STITCHES -> REDUCED_BITMAP
                         }
                     )
                 },
-                enabled = currentMode != COMPOSABLE
+                enabled = currentMode != BITMAP
             ) {
                 Text("Back")
             }
@@ -390,7 +385,6 @@ private fun WizardButtons(
                 onClick = {
                     onModeChanged(
                         when (currentMode) {
-                            COMPOSABLE -> BITMAP
                             BITMAP -> REDUCED_BITMAP
                             REDUCED_BITMAP -> STITCHES
                             STITCHES -> currentMode
@@ -398,7 +392,6 @@ private fun WizardButtons(
                     )
                 },
                 enabled = when (currentMode) {
-                    COMPOSABLE -> true
                     BITMAP -> imageBitmap != null
                     REDUCED_BITMAP -> reducedImageBitmap != null
                     STITCHES -> false
