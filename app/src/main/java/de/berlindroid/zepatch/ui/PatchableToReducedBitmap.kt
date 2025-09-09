@@ -52,7 +52,7 @@ fun PatchableToReducedBitmap(
     ) {
         WizardSectionTitle(
             title = "Reduce Colors",
-            helpText = "Choose the number of colors and generate a simplified bitmap suitable for stitching."
+            helpText = "Choose the number of colors and generate a simplified bitmap suitable for embroidering."
         )
         image?.let {
             Image(
@@ -80,15 +80,24 @@ fun PatchableToReducedBitmap(
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    if (colorText.isNotEmpty()) {
+                    if (isValidColorCount(colorText)) {
                         focusManager.clearFocus()
                         computeReducedBitmap()
                     }
                 }
-            )
+            ),
+            isError = !isValidColorCount(colorText), // Set the error state
+            supportingText = {
+                if (!isValidColorCount(colorText)) {
+                    Text(
+                        text = "Please enter a valid number (3 or more)",
+                        color = androidx.compose.material3.MaterialTheme.colorScheme.error
+                    )
+                }
+            }
         )
 
-        Button(enabled = colorText.isNotEmpty(), onClick = computeReducedBitmap) { Text("Reduce") }
+        Button(enabled = isValidColorCount(colorText) , onClick = computeReducedBitmap) { Text("Reduce") }
 
         reducedImage?.let {
             Image(
@@ -99,6 +108,16 @@ fun PatchableToReducedBitmap(
         } ?: CircularProgressIndicator()
     }
 }
+
+fun isValidColorCount(colorCountText: String): Boolean  =
+    when {
+        colorCountText.isEmpty() -> false
+        colorCountText.toIntOrNull() == null -> false
+        colorCountText.toInt() < 3 -> false
+        else -> true
+    }
+
+
 
 @Preview(showBackground = true)
 @Composable
