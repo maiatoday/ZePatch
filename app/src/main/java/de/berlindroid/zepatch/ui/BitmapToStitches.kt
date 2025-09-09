@@ -1,12 +1,16 @@
 package de.berlindroid.zepatch.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -24,7 +28,15 @@ fun BitmapToStitches(
     previewImage: ImageBitmap?,
     creatingEmbroidery: Boolean,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        WizardSectionTitle(
+            title = "Generate Stitches",
+            helpText = "Turn the reduced bitmap into an embroidery stitch file and preview the result."
+        )
         Image(
             bitmap = reducedImageBitmap,
             contentDescription = "patch bitmap",
@@ -32,17 +44,16 @@ fun BitmapToStitches(
         )
         Button(onClick = {
             onCreateEmbroidery(name, reducedImageBitmap, reducedHistogram)
-        }) { Text("Do it") }
+        }) { Text("Generate") }
 
-        val preview = previewImage
-        if (preview != null) {
+        previewImage?.let {
             Image(
-                bitmap = preview,
+                bitmap = it,
                 contentDescription = "patch bitmap",
                 modifier = Modifier.fillMaxWidth()
             )
-        } else if (creatingEmbroidery) {
-            CircularProgressIndicator()
+        } ?: Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            if (creatingEmbroidery) CircularProgressIndicator()
         }
     }
 }

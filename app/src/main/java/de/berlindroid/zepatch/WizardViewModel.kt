@@ -11,7 +11,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.reduceColors
-import de.berlindroid.zepatch.PatchablePreviewMode.COMPOSABLE
 import de.berlindroid.zepatch.stiches.StitchToPES
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,7 +34,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         val embroideryPreviewImage: ImageBitmap? = null,
         val creatingEmbroidery: Boolean = false,
         val error: String? = null,
-        val previewMode: PatchablePreviewMode = COMPOSABLE,
+        val previewMode: PatchablePreviewMode = PatchablePreviewMode.BITMAP,
     )
 
     private val _uiState = MutableStateFlow(UIState())
@@ -71,6 +70,8 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         val state = _uiState.value
         val image = state.imageBitmap ?: return
         val colorCount = state.colorCount
+        _uiState.update { it.copy(reducedImageBitmap = null) }
+
         viewModelScope.launch(Dispatchers.IO) {
             val aspect = image.width / image.height.toFloat()
             val (reducedBmp, histogram) = image.asAndroidBitmap()

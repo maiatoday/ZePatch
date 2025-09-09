@@ -7,17 +7,16 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,6 +27,7 @@ import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -38,9 +38,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -55,14 +52,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.PaintingStyle.Companion.Stroke
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.embroidermodder.punching.Histogram
 import de.berlindroid.zepatch.PatchablePreviewMode.BITMAP
-import de.berlindroid.zepatch.PatchablePreviewMode.COMPOSABLE
 import de.berlindroid.zepatch.PatchablePreviewMode.REDUCED_BITMAP
 import de.berlindroid.zepatch.PatchablePreviewMode.STITCHES
 import de.berlindroid.zepatch.ui.BitmapToStitches
@@ -71,12 +71,11 @@ import de.berlindroid.zepatch.ui.PatchableToBitmap
 import de.berlindroid.zepatch.ui.PatchableToReducedBitmap
 import de.berlindroid.zepatch.ui.theme.ZePatchTheme
 import de.berlindroid.zepatch.utils.multiLet
-import de.berlindroid.zepatch.utils.uppercaseWords
 import kotlinx.coroutines.launch
 import androidx.lifecycle.viewmodel.compose.viewModel as lifecycleViewModel
 
 enum class PatchablePreviewMode {
-    COMPOSABLE, BITMAP, REDUCED_BITMAP, STITCHES
+    BITMAP, REDUCED_BITMAP, STITCHES
 }
 
 @ExperimentalMaterial3Api
@@ -232,7 +231,52 @@ private fun PatchableDetail(
         Column(
             modifier = Modifier.padding(innerPadding),
         ) {
-            ProgressPills(uiState.imageBitmap, uiState.reducedImageBitmap, uiState.previewMode)
+            ProgressHeader(
+                imageBitmap = uiState.imageBitmap,
+                reducedImageBitmap = uiState.reducedImageBitmap,
+                currentMode = uiState.previewMode,
+                embroideryData = uiState.embroideryData,
+                onPrev = {
+                    viewModel.setPreviewMode(
+                        when (uiState.previewMode) {
+                            BITMAP -> BITMAP
+                            REDUCED_BITMAP -> BITMAP
+                            STITCHES -> REDUCED_BITMAP
+                        }
+                    )
+                },
+                onNext = {
+                    viewModel.setPreviewMode(
+                        when (uiState.previewMode) {
+                            BITMAP -> REDUCED_BITMAP
+                            REDUCED_BITMAP -> STITCHES
+                            STITCHES -> uiState.previewMode
+                        }
+                    )
+                    if (uiState.previewMode == STITCHES) {
+                        uiState.embroideryData?.let { data ->
+                            val magic = String(data.toList().subList(0, 8).toByteArray())
+                            val byteCount = data.size
+                            val kbCount = byteCount / 1024
+                            val mbCount = kbCount / 1024
+
+                            val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                                type = "application/octet"
+                                addCategory(Intent.CATEGORY_OPENABLE)
+                                putExtra(Intent.EXTRA_TITLE, "$name.pes")
+                            }
+
+                            launcher.launch(intent)
+
+                            Toast.makeText(
+                                context,
+                                "Found $byteCount bytes. ($kbCount KB, $mbCount MB)\nFile magic '$magic'.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
+            )
 
             WizardContent(
                 uiState.previewMode,
@@ -246,20 +290,6 @@ private fun PatchableDetail(
                 computeReducedBitmap = viewModel::computeReducedBitmap,
                 patchable = patchable
             )
-
-            WizardButtons(
-                uiState.previewMode,
-                uiState.imageBitmap,
-                uiState.reducedImageBitmap,
-                uiState.embroideryData,
-                name,
-                launcher
-            ) {
-                viewModel.setPreviewMode(it)
-                if (it == REDUCED_BITMAP) {
-                    viewModel.computeReducedBitmap()
-                }
-            }
         }
     }
 }
@@ -283,155 +313,137 @@ private fun WizardContent(
             .padding(16.dp),
         shape = RoundedCornerShape(size = 25.dp),
     ) {
-        when (currentMode) {
-            COMPOSABLE -> PatchableBoundingBox(patchable = patchable)
-
-            BITMAP -> PatchableToBitmap(
-                onBitmap = onBitmapUpdated,
-                patchable = patchable
-            )
-
-            REDUCED_BITMAP -> PatchableToReducedBitmap(
-                image = imageBitmap,
-                colorCount = colorCount,
-                onColorCountChanged = onColorCountUpdated,
-                computeReducedBitmap = computeReducedBitmap,
-                reducedImage = reducedImageBitmap,
-            )
-
-            STITCHES -> reducedImageBitmap?.multiLet(reducedHistogram) { img, histo ->
-                val vm: WizardViewModel = lifecycleViewModel()
-                val ui by vm.uiState.collectAsStateWithLifecycle()
-                BitmapToStitches(
-                    reducedImageBitmap = img,
-                    reducedHistogram = histo,
-                    name = name,
-                    onCreateEmbroidery = { n, b, h -> vm.createEmbroidery(n, b, h) },
-                    previewImage = ui.embroideryPreviewImage,
-                    creatingEmbroidery = ui.creatingEmbroidery,
+        val scrollState = androidx.compose.foundation.rememberScrollState()
+        Column(
+            modifier = Modifier
+                .verticalScroll(scrollState)
+                .padding(16.dp)
+        ) {
+            when (currentMode) {
+                BITMAP -> PatchableToBitmap(
+                    onBitmap = onBitmapUpdated,
+                    patchable = patchable
                 )
+
+                REDUCED_BITMAP -> PatchableToReducedBitmap(
+                    image = imageBitmap,
+                    colorCount = colorCount,
+                    onColorCountChanged = onColorCountUpdated,
+                    computeReducedBitmap = computeReducedBitmap,
+                    reducedImage = reducedImageBitmap,
+                )
+
+                STITCHES -> reducedImageBitmap?.multiLet(reducedHistogram) { img, histo ->
+                    val vm: WizardViewModel = lifecycleViewModel()
+                    val ui by vm.uiState.collectAsStateWithLifecycle()
+                    BitmapToStitches(
+                        reducedImageBitmap = img,
+                        reducedHistogram = histo,
+                        name = name,
+                        onCreateEmbroidery = { n, b, h -> vm.createEmbroidery(n, b, h) },
+                        previewImage = ui.embroideryPreviewImage,
+                        creatingEmbroidery = ui.creatingEmbroidery,
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ProgressPills(
-    imageBitmap: ImageBitmap?,
-    reducedImageBitmap: ImageBitmap?,
-    currentMode: PatchablePreviewMode
-) {
-    SingleChoiceSegmentedButtonRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-    ) {
-        PatchablePreviewMode.entries.toTypedArray().forEachIndexed { index, mode ->
-            SegmentedButton(
-                modifier = Modifier.height(48.dp),
-                shape = SegmentedButtonDefaults.itemShape(
-                    index = index,
-                    count = PatchablePreviewMode.entries.size,
-                ),
-                enabled = when (mode) {
-                    COMPOSABLE -> true
-                    BITMAP -> true
-                    REDUCED_BITMAP -> imageBitmap != null
-                    STITCHES -> reducedImageBitmap != null
-                },
-                onClick = { },
-                selected = currentMode == mode,
-                label = { Text(mode.toString().uppercaseWords()) }
-            )
-
-        }
-    }
-}
-
-@Composable
-private fun WizardButtons(
-    currentMode: PatchablePreviewMode,
+private fun ProgressHeader(
     imageBitmap: ImageBitmap?,
     reducedImageBitmap: ImageBitmap?,
     embroideryData: ByteArray?,
-    name: String,
-    launcher: ManagedActivityResultLauncher<Intent, ActivityResult>,
-    onModeChanged: (PatchablePreviewMode) -> Unit,
+    currentMode: PatchablePreviewMode,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
 ) {
-    // TODO MOVE ME INTO VM
-    val context = LocalContext.current
-
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(percent = 50)
+            .padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 4.dp)
-        ) {
-            Button(
-                onClick = {
-                    onModeChanged(
-                        when (currentMode) {
-                            COMPOSABLE -> COMPOSABLE
-                            BITMAP -> COMPOSABLE
-                            REDUCED_BITMAP -> BITMAP
-                            STITCHES -> REDUCED_BITMAP
-                        }
-                    )
-                },
-                enabled = currentMode != COMPOSABLE
-            ) {
-                Text("Back")
+        Button(onClick = onPrev, enabled = currentMode != BITMAP) { Text("Prev") }
+        StepProgressIndicator(
+            modifier = Modifier
+                .height(48.dp)
+                .weight(1f)
+                .padding(horizontal = 8.dp),
+            totalSteps = 3,
+            currentStep = when (currentMode) {
+                BITMAP -> 0
+                REDUCED_BITMAP -> 1
+                STITCHES -> 2
             }
-            Spacer(Modifier.weight(1f))
-            Button(
-                onClick = {
-                    onModeChanged(
-                        when (currentMode) {
-                            COMPOSABLE -> BITMAP
-                            BITMAP -> REDUCED_BITMAP
-                            REDUCED_BITMAP -> STITCHES
-                            STITCHES -> currentMode
-                        }
-                    )
-                },
-                enabled = when (currentMode) {
-                    COMPOSABLE -> true
-                    BITMAP -> imageBitmap != null
-                    REDUCED_BITMAP -> reducedImageBitmap != null
-                    STITCHES -> false
-                }
-            ) {
-                Text("Next")
+        )
+        Button(
+            onClick = onNext, enabled = when (currentMode) {
+                BITMAP -> imageBitmap != null
+                REDUCED_BITMAP -> reducedImageBitmap != null
+                STITCHES -> embroideryData != null
             }
-            Button(
-                onClick = {
-                    embroideryData?.let { data ->
-                        val magic = String(data.toList().subList(0, 8).toByteArray())
-                        val byteCount = data.size
-                        val kbCount = byteCount / 1024
-                        val mbCount = kbCount / 1024
+        ) { if (currentMode == STITCHES) Text("Finish") else Text("Next") }
+    }
+}
 
-                        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-                            type = "application/octet"
-                            addCategory(Intent.CATEGORY_OPENABLE)
-                            putExtra(Intent.EXTRA_TITLE, "$name.pes")
-                        }
+@Composable
+private fun StepProgressIndicator(
+    modifier: Modifier = Modifier,
+    totalSteps: Int,
+    currentStep: Int,
+) {
+    Canvas(
+        modifier = modifier
+            .height(24.dp)
+    ) {
+        val radius = size.height / 4f
+        val centerY = size.height / 2f
+        val spacing = (size.width - (radius * 2f * totalSteps)) / (totalSteps - 1).coerceAtLeast(1)
+        val strokeWidth = radius / 2f
+        val lineColor = Color(0xFF9E9E9E)
+        val fillColor = Color(0xFF9E9E9E)
+        val outlineColor = Color(0xFF9E9E9E)
 
-                        launcher.launch(intent)
+        // Compute centers for steps
+        val centers = (0 until totalSteps).map { i ->
+            val x = radius + i * (2f * radius + spacing)
+            Offset(x, centerY)
+        }
 
-                        Toast.makeText(
-                            context,
-                            "Found $byteCount bytes. ($kbCount KB, $mbCount MB)\nFile magic '$magic'.",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                },
-                enabled = currentMode == STITCHES && embroideryData != null
-            ) {
-                Text("Finish")
+        // Draw connecting lines
+        for (i in 0 until totalSteps - 1) {
+            val start = centers[i]
+            val end = centers[i + 1]
+            drawLine(
+                color = lineColor,
+                start = Offset(start.x + radius, centerY),
+                end = Offset(end.x - radius, centerY),
+                strokeWidth = strokeWidth
+            )
+        }
+
+        // Draw circles
+        val displayCurrent = (totalSteps - 1 - currentStep).coerceIn(0, totalSteps - 1)
+        centers.forEachIndexed { i, c ->
+            val index = totalSteps - 1 - i
+            if (index == displayCurrent) {
+                // highlighted filled circle with thin outline
+                drawCircle(color = fillColor, radius = radius, center = c)
+                drawCircle(
+                    color = outlineColor,
+                    radius = radius,
+                    center = c,
+                    style = Stroke(width = strokeWidth / 2f)
+                )
+            } else {
+                drawCircle(
+                    color = outlineColor,
+                    radius = radius,
+                    center = c,
+                    style = Stroke(width = strokeWidth / 1.5f)
+                )
             }
         }
     }
