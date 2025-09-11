@@ -42,9 +42,11 @@ See [examples](app/src/main/java/de/berlindroid/zepatch/patchable/Demo.kt)
    - Rebuild so KSP regenerates the patch registry.
 4. Preview and submit
    - Use the app’s UI to preview and export your patch design.
-   - Event staff will convert and embroider it for you.
+   - Event staff will provide a USB stick, save your patch on the device.
+   - Event staff will embroider your patch.
 
-Tip: Avoid tiny text and hairline strokes. Solid fills and thick lines stitch best.
+[!TIP]
+Avoid tiny text and hairline strokes. Solid fills and thick lines stitch best.
 
 
 ## Project overview
@@ -64,9 +66,9 @@ https://github.com/gdg-berlin-android/ZePatch/releases/latest
 ## Pick up an issue (great for attendees!)
 
 - Good first issues:  
-  https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22
+  https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22%F0%9F%A4%93%20Good%20First%20Issue%20%F0%9F%AB%B6%22
 - Droidcon-tagged issues:  
-  https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue+is%3Aopen+label%3ADroidcon
+  https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22%F0%9F%A6%BE%20droidcon%20%F0%9F%A4%96%22
 
 If you’re unsure where to start, grab any "good first issue" or ping maintainers on the issue.
 
@@ -91,9 +93,11 @@ If you see missing Python errors, set an environment variable ZEPATCH_PYTHON_PAT
 
 Example (macOS/Linux):
 
+```bash
 export ZEPATCH_PYTHON_PATH=/usr/local/bin/python3
+```
 
 
 ## Contributing
 
-Small, focused PRs are welcome. Please include a brief description and screenshots or screen recordings for UI changes when practical. See SECURITY.md for vulnerability reporting. Don’t commit build outputs or generated files.
+Small, focused PRs are welcome. Please include a brief description and screenshots or screen recordings for UI changes when practical. Don’t commit build outputs or generated files.
