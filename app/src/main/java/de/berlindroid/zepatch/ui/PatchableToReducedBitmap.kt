@@ -113,7 +113,7 @@ fun isValidColorCount(colorCountText: String): Boolean  =
     when {
         colorCountText.isEmpty() -> false
         colorCountText.toIntOrNull() == null -> false
-        colorCountText.toInt() < 3 -> false
+        colorCountText.toInt() < 1 -> false
         else -> true
     }
 
