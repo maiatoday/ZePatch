@@ -28,6 +28,25 @@ A patchable is simply a Composable function annotated with @Patch that ZePatch c
 
 See [examples](app/src/main/java/de/berlindroid/zepatch/patchable/Demo.kt)
 
+In its simplest form, a patchable looks like this:
+```kotlin
+@Patch("Hello World") // you need this to register it
+@Composable
+fun HelloWorld(
+    shouldCapture: Boolean = false, // used to activate the convert to bitmap
+    onBitmap: (ImageBitmap) -> Unit = {}, // used to return the bitmap from the SafeArea
+) {
+    // Safe Area is the part that becomes the patch
+    SafeArea(
+        shouldCapture = shouldCapture, // You need to pass this through from the parent or it won't work
+        onBitmap = onBitmap, // You need to pass this through from the parent or it won't work
+    ) {
+        Text("Hello World!", fontSize = 48.sp) // <- Your creative input goes here
+    }
+    // Add interactive pieces here. This will not be part of the patch
+}
+
+```
 
 ## First steps for attendees
 
@@ -45,8 +64,8 @@ See [examples](app/src/main/java/de/berlindroid/zepatch/patchable/Demo.kt)
    - Event staff will provide a USB stick, save your patch on the device.
    - Event staff will embroider your patch.
 
-[!TIP]
-Avoid tiny text and hairline strokes. Solid fills and thick lines stitch best.
+> [!TIP]
+> Avoid tiny text and hairline strokes. Solid fills and thick lines stitch best.
 
 
 ## Project overview
@@ -65,10 +84,8 @@ https://github.com/gdg-berlin-android/ZePatch/releases/latest
 
 ## Pick up an issue (great for attendees!)
 
-- Good first issues:  
-  https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22%F0%9F%A4%93%20Good%20First%20Issue%20%F0%9F%AB%B6%22
-- Droidcon-tagged issues:  
-  https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22%F0%9F%A6%BE%20droidcon%20%F0%9F%A4%96%22
+- [🤓 Good First Issue 🫶](https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22%F0%9F%A4%93%20Good%20First%20Issue%20%F0%9F%AB%B6%22) for something easy to start
+- [🦾 droidcon 🤖](https://github.com/gdg-berlin-android/ZePatch/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22%F0%9F%A6%BE%20droidcon%20%F0%9F%A4%96%22) specific for droidcon
 
 If you’re unsure where to start, grab any "good first issue" or ping maintainers on the issue.
 
