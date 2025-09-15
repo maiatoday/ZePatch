@@ -9,6 +9,7 @@ import androidx.core.graphics.blue
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.green
 import androidx.core.graphics.red
+import kotlin.math.min
 
 typealias Color = Int
 typealias Amount = Int
@@ -40,33 +41,37 @@ fun Bitmap.colorHistogram(): Histogram {
     )
 }
 
-fun Bitmap.reduceColors(maxColorCounts: Int): Pair<Bitmap, Histogram> {
-    val minDistance = 25
+fun Bitmap.reduceColors(
+    maxColorCounts: Int,
+    minTolerance: Int,
+): Pair<Bitmap, Histogram> {
+    if(minTolerance < 4) {
+        Log.i("REDUCIN", "Color merging tolerance ($minTolerance) too low, resetting to 4.")
+    }
+
+    var tolerance = min(4, minTolerance)
     var histogram =
         colorHistogram()
-            .mergeSimilarColors(maxColorCounts, minDistance)
-            .removeLowCounts(maxColorCounts, minDistance)
+            .mergeSimilarColors(maxColorCounts, tolerance)
 
     var maxTries = 3
     while (histogram.colors.size > maxColorCounts && maxTries > 0) {
         histogram = histogram
-            .mergeSimilarColors(maxColorCounts, minDistance)
-            .removeLowCounts(maxColorCounts, minDistance)
+            .mergeSimilarColors(maxColorCounts, tolerance)
         maxTries--
     }
 
-    maxTries = 3
-    var currentDistance = 50
-
     // reduce more aggressively
+    maxTries = 10
     while (histogram.colors.size > maxColorCounts && maxTries > 0) {
         histogram = histogram
-            .mergeSimilarColors(maxColorCounts, currentDistance)
-            .removeLowCounts(maxColorCounts, currentDistance)
+            .mergeSimilarColors(maxColorCounts, tolerance)
 
-        currentDistance = (currentDistance * 1.25f).toInt()
+        tolerance = (tolerance * 1.5f).toInt()
         maxTries--
-    } // todo if not reject and give up
+    }
+
+    // todo if not reject and give up
 
     histogram = Histogram(
         spread = histogram
@@ -90,7 +95,7 @@ fun Bitmap.reduceColors(maxColorCounts: Int): Pair<Bitmap, Histogram> {
     return result to histogram
 }
 
-fun Histogram.mergeSimilarColors(maxColorCounts: Int, distance: Int): Histogram {
+fun Histogram.mergeSimilarColors(maxColorCounts: Int, tolerance: Int): Histogram {
     if (spread.size <= maxColorCounts) {
         return this
     }
@@ -102,7 +107,7 @@ fun Histogram.mergeSimilarColors(maxColorCounts: Int, distance: Int): Histogram 
 
         if (e.key.alpha == 0xFF) {
             for (r in result) {
-                if (distance(e.key, r.key) < distance) {
+                if (distance(e.key, r.key) < tolerance) {
                     merged = true
                     result[r.key] = r.value + e.value
                 }
@@ -144,10 +149,16 @@ fun Histogram.removeLowCounts(maxColorCounts: Int, threshold: Int): Histogram {
     return Histogram(result)
 }
 
-private fun IntArray.filteredBy(targetPixels: List<Int>): IntArray {
-    val result = map { currentColor ->
-        targetPixels.minBy { targetPixel ->
-            distance(currentColor, targetPixel)
+private fun IntArray.filteredBy(reducedColors: List<Int>): IntArray {
+    val opaqueColors = reducedColors.filter { it.alpha == 0xFF }
+
+    val result = map { pixel ->
+        if (pixel.alpha == 0xFF) {
+            opaqueColors.minBy { reducedColor ->
+                distance(pixel, reducedColor)
+            }
+        } else {
+            0x00
         }
     }
 
