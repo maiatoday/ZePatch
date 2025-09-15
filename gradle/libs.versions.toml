@@ -17,6 +17,7 @@ corex = "1.7.0"
 junitKtx = "1.3.0"
 appcompat = "1.7.1"
 material = "1.13.0"
+jts = "1.20.0"
 
 [libraries]
 kotlinpoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinpoet" }
@@ -45,6 +46,7 @@ androidx-adaptive-navigation = { group = "androidx.compose.material3.adaptive", 
 androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+jts = { group = "org.locationtech.jts", name = "jts-core", version.ref = "jts" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
