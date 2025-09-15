@@ -77,7 +77,10 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
             val (reducedBmp, histogram) = image.asAndroidBitmap()
                 .copy(Bitmap.Config.ARGB_8888, false)
                 .scale((512 * aspect).toInt(), 512, false)
-                .reduceColors(colorCount)
+                .reduceColors(
+                    colorCount,
+                    minTolerance = 100
+                )
 
             _uiState.update {
                 it.copy(
@@ -102,10 +105,11 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
                     name = name,
                     bitmap = bitmap.asAndroidBitmap(),
                     histogram = histogram,
-                    mmWidth = 500f * aspect,
-                    mmHeight = 500f,
-                    mmDensityX = 4f,
-                    mmDensityY = 2f,
+                    mmWidth = 50f * aspect,
+                    mmHeight = 50f,
+                    mmDensityX = 0.5f,
+                    mmDensityY = 0.2f,
+                    satinBorderThickness = 10f,
                 )
 
                 val context = getApplication<Application>().applicationContext
@@ -136,5 +140,4 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
             }
         }
     }
-
 }
