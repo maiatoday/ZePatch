@@ -182,7 +182,3 @@ private fun distance(a: Int, b: Int): Float {
 
     return ColorUtils.distanceEuclidean(aLAB, bLAB).toFloat()
 }
-
-
-val Bitmap.aspectRatio: Float
-    get() = width.toFloat() / height
