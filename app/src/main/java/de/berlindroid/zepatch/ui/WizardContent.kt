@@ -75,3 +75,16 @@ fun WizardContent(
         }
     }
 }
+
+@Preview(showSystemUi = true)
+@Composable
+private fun WizardContentPreview() {
+    WizardContent(
+        state = SetupBitmap("name", createBitmap(100, 100).asImageBitmap()),
+        patchable = patchables.values.first(),
+        onBitmapUpdated = {},
+        onColorCountUpdated = {},
+        onComputeReducedBitmap = {},
+        onCreateEmbroidery = {},
+    )
+}

@@ -69,3 +69,14 @@ fun WizardProgress(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun WizardProgresPreview() {
+    WizardProgress(
+        state = SetupComposable("hello"),
+        onPrev = {},
+        onNext = {},
+        onDone = {},
+    )
+}

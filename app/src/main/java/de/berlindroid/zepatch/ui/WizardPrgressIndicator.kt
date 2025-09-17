@@ -72,3 +72,14 @@ fun WizardPrgressIndicator(
         }
     }
 }
+
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+private fun WizardPrgressIndicatorPreview() {
+    WizardPrgressIndicator(
+        modifier = Modifier.size(500.dp, 40.dp),
+        totalSteps = 5,
+        currentStep = 1,
+    )
+}
