@@ -1,6 +1,5 @@
 package de.berlindroid.zepatch.ui
 
-import android.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -35,14 +34,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
-import de.berlindroid.zepatch.WizardViewModel
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
 import de.berlindroid.zepatch.isBusy
 import de.berlindroid.zepatch.utils.multiLet
 
 @Composable
 fun PatchableToReducedBitmap(
     modifier: Modifier = Modifier,
-    state: WizardViewModel.UiState.SetupBitmap,
+    state: SetupBitmap,
     computeReducedBitmap: () -> Unit = {},
     onColorCountChanged: (Int) -> Unit = {}
 ) {

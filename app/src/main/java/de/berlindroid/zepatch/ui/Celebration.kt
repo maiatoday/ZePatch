@@ -3,7 +3,6 @@ package de.berlindroid.zepatch.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
@@ -12,12 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import de.berlindroid.zepatch.WizardViewModel
+import de.berlindroid.zepatch.WizardViewModel.UiState.Done
 
 @Composable
 fun Celebration(
     modifier: Modifier = Modifier,
-    state: WizardViewModel.UiState.Done
+    state: Done
 ) {
     Column(
         modifier = modifier.fillMaxSize(),

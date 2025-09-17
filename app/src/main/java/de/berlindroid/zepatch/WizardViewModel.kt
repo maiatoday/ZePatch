@@ -6,7 +6,6 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
 import androidx.compose.ui.graphics.ImageBitmap
@@ -18,7 +17,11 @@ import androidx.lifecycle.viewModelScope
 import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.reduceColors
 import de.berlindroid.zepatch.WizardViewModel.UiState
-import de.berlindroid.zepatch.WizardViewModel.UiState.*
+import de.berlindroid.zepatch.WizardViewModel.UiState.Done
+import de.berlindroid.zepatch.WizardViewModel.UiState.SelectPatchable
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.utils.multiLet
 import kotlinx.coroutines.Dispatchers

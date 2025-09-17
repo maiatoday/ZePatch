@@ -3,25 +3,32 @@ package de.berlindroid.zepatch.ui
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import de.berlindroid.zepatch.WizardViewModel
+import androidx.core.graphics.createBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState
+import de.berlindroid.zepatch.WizardViewModel.UiState.Done
+import de.berlindroid.zepatch.WizardViewModel.UiState.SelectPatchable
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
+import de.berlindroid.zepatch.patchables
 
 @Composable
 fun WizardContent(
-    state: WizardViewModel.UiState,
+    state: UiState,
     patchable: @Composable (Boolean, (ImageBitmap) -> Unit) -> Unit,
     onBitmapUpdated: (ImageBitmap) -> Unit,
     onColorCountUpdated: (Int) -> Unit,
-    computeReducedBitmap: () -> Unit,
+    onComputeReducedBitmap: () -> Unit,
+    onCreateEmbroidery: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -42,27 +49,26 @@ fun WizardContent(
                 }
             }
 
-            val vm: WizardViewModel = viewModel()
             when (state) {
-                is WizardViewModel.UiState.SelectPatchable -> Unit
+                is SelectPatchable -> Unit
 
-                is WizardViewModel.UiState.SetupComposable -> PatchableToBitmap(
+                is SetupComposable -> PatchableToBitmap(
                     patchable = patchable,
                     onBitmap = onBitmapUpdated
                 )
 
-                is WizardViewModel.UiState.SetupBitmap -> PatchableToReducedBitmap(
+                is SetupBitmap -> PatchableToReducedBitmap(
                     state = state,
                     onColorCountChanged = onColorCountUpdated,
-                    computeReducedBitmap = computeReducedBitmap,
+                    computeReducedBitmap = onComputeReducedBitmap,
                 )
 
-                is WizardViewModel.UiState.SetupEmbroidery -> BitmapToStitches(
+                is SetupEmbroidery -> BitmapToStitches(
                     state = state,
-                    onCreateEmbroidery = vm::createEmbroidery,
+                    onCreateEmbroidery = onCreateEmbroidery,
                 )
 
-                is WizardViewModel.UiState.Done -> Celebration(
+                is Done -> Celebration(
                     state = state
                 )
             }

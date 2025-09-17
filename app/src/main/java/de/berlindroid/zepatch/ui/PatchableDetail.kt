@@ -15,13 +15,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.berlindroid.zepatch.WizardViewModel
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
 
 @ExperimentalMaterial3Api
 @Composable
@@ -47,7 +48,7 @@ fun PatchableDetail(
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is WizardViewModel.UiState.SetupEmbroidery) {
+        if (uiState is SetupEmbroidery) {
             viewModel.setLauncher(launcher)
         }
     }
