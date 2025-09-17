@@ -17,16 +17,14 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.colorHistogram
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
+import de.berlindroid.zepatch.isBusy
 
 @Composable
 fun BitmapToStitches(
     modifier: Modifier = Modifier,
-    reducedImageBitmap: ImageBitmap,
-    reducedHistogram: Histogram,
-    name: String,
-    onCreateEmbroidery: (name: String, bitmap: ImageBitmap, histogram: Histogram) -> Unit,
-    previewImage: ImageBitmap?,
-    creatingEmbroidery: Boolean,
+    state: SetupEmbroidery,
+    onCreateEmbroidery: () -> Unit,
 ) {
     Column(
         modifier = modifier.fillMaxSize(),
@@ -38,22 +36,20 @@ fun BitmapToStitches(
             helpText = "Turn the reduced bitmap into an embroidery stitch file and preview the result."
         )
         Image(
-            bitmap = reducedImageBitmap,
-            contentDescription = "patch bitmap",
+            bitmap = state.reducedBitmap,
+            contentDescription = "reduced bitmap",
             modifier = Modifier.fillMaxWidth()
         )
-        Button(onClick = {
-            onCreateEmbroidery(name, reducedImageBitmap, reducedHistogram)
-        }) { Text("Generate") }
+        Button(onClick = onCreateEmbroidery, enabled = !state.isCompleted() && !state.isBusy()) { Text("Generate") }
 
-        previewImage?.let {
+        state.embroideryPreviewImage?.let {
             Image(
                 bitmap = it,
                 contentDescription = "patch bitmap",
                 modifier = Modifier.fillMaxWidth()
             )
         } ?: Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            if (creatingEmbroidery) CircularProgressIndicator()
+            if (state.currentlyEmbroidering) CircularProgressIndicator()
         }
     }
 }
@@ -64,12 +60,15 @@ fun BitmapToStitchesPreview() {
     val imageBitmap = ImageBitmap(width = 100, height = 100)
     val histogram = imageBitmap.asAndroidBitmap().colorHistogram()
     BitmapToStitches(
-        reducedImageBitmap = imageBitmap,
-        reducedHistogram = histogram,
-        name = "MyPatch",
-        onCreateEmbroidery = { _, _, _ -> },
-        previewImage = null,
-        creatingEmbroidery = false,
+        state = SetupEmbroidery(
+            image = imageBitmap,
+            colorCount = 44,
+            reducedBitmap = imageBitmap,
+            reducedHistogram = histogram,
+            name = "MyPatch",
+            currentlyEmbroidering = false,
+        ),
+        onCreateEmbroidery = {},
     )
 }
 

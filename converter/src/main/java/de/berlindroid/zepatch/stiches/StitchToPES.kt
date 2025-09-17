@@ -2,24 +2,21 @@ package de.berlindroid.zepatch.stiches
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.util.Log
 import android.widget.Toast
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.graphics.alpha
-import androidx.core.graphics.drawable.toBitmap
 import androidx.core.graphics.get
-import androidx.core.graphics.scale
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.colors
-import com.embroidermodder.punching.reduceColors
-import de.berlindroid.zepatch.converter.R
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.Geometry
+import org.locationtech.jts.geom.GeometryFactory
 import kotlin.collections.toMutableMap
 import kotlin.io.encoding.Base64
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
+import kotlin.math.floor
 import kotlin.math.sqrt
 
 data class XY(
@@ -27,13 +24,27 @@ data class XY(
     val y: Float,
 ) {
     constructor(x: Int, y: Int) : this(x.toFloat(), y.toFloat())
+    constructor(x: Double, y: Double) : this(x.toFloat(), y.toFloat())
     constructor() : this(0, 0)
 }
 
 fun XY.distanceTo(other: XY): Float = sqrt((other.x - this.x).squared + (other.y - this.y).squared)
+fun XY.orthogonal(): XY = XY(y, -x)
+fun XY.normalize(): XY = this / length
 
 val XY.length: Float
     get() = distanceTo(XY())
+
+val XY.isNaN: Boolean
+    get() = x.isNaN() || y.isNaN() || length < 0.01f
+
+operator fun XY.minus(other: XY): XY = XY(this.x - other.x, this.y - other.y)
+operator fun XY.plus(other: XY): XY = XY(this.x + other.x, this.y + other.y)
+operator fun XY.div(scalar: Float): XY = XY(x / scalar, y / scalar)
+operator fun XY.times(scalar: Float): XY = XY(x * scalar, y * scalar)
+operator fun Float.times(xy: XY): XY = XY(xy.x * this, xy.y * this)
+
+infix fun XY.dot(other: XY): Float = (this.x * other.x) + (this.y * other.y)
 
 private val Float.squared: Float
     get() = this * this
@@ -41,7 +52,7 @@ private val Float.squared: Float
 data class Thread(
     val color: Int,
     val stitches: Array<XY>,
-    val absolute: Boolean = false,
+    val absolute: Boolean,
 )
 
 data class Embroidery(
@@ -75,7 +86,7 @@ object StitchToPES {
     }
 
     /**
-     * Crappy first iteration, do not look to closely.
+     * Beautiful transformation of an incoming bitmap and histogram to a set of stitches.
      */
     fun createEmbroideryFromBitmap(
         name: String,
@@ -84,72 +95,67 @@ object StitchToPES {
         mmWidth: Float,
         mmHeight: Float,
         mmDensityX: Float,
-        mmDensityY: Float
+        mmDensityY: Float,
+        satinBorderThickness: Float,
     ): Embroidery {
         val strandsPerColor =
             bitmap.getColorStrands(
                 histogram,
-                mmWidth,
-                mmHeight,
-                mmDensityX,
-                mmDensityY
+                mmWidth * 10,
+                mmHeight * 10,
+                mmDensityX * 10,
+                mmDensityY * 10
             )
+
+        val threads = strandsPerColor.map { strandWithColor ->
+            val (color, strand) = strandWithColor
+            Thread(
+                color = color,
+                stitches = strand.toStitchesWithMinimalJumps(),
+                absolute = true,
+            )
+        }.toTypedArray()
 
         return Embroidery(
             name,
-            strandsPerColor.map { strandWithColor ->
-                val (color, strand) = strandWithColor
-                Thread(
-                    color = color,
-                    stitches = strand
-                        .toStitchesWithMinimalJumps()
-                        .map {
-                            XY(
-                                (it.x * 10).toInt() / 10f,
-                                (it.y * 10).toInt() / 10f,
-                            )
-                        }.toTypedArray(),
-                    absolute = true,
-                )
-            }.toTypedArray()
+            threads
+                    + threads.satinBorder(
+                color = Color.BLACK,
+                thickness = satinBorderThickness,
+                distance = satinBorderThickness / 2f,
+            )
         )
     }
 
-    fun createDummyEmbroidery(distance: Float = 25f, step: Float = 1.5f) = Embroidery(
-        name = "RedCircleInGreenFilledRectangle",
-        threads = arrayOf(
+    private fun Array<Thread>.satinBorder(
+        color: Int,
+        thickness: Float,
+        distance: Float
+    ): List<Thread> {
+        val factory = GeometryFactory()
+        val points = factory.createMultiPointFromCoords(
+            stitches.map { Coordinate(it.x.toDouble(), it.y.toDouble()) }.toTypedArray()
+        )
+
+        val hull = points.convexHull()
+        val outer = hull.buffer(thickness / 2.0)
+
+        return listOf(
+//            Thread(
+//                color = Color.WHITE,
+//                stitches = outer.toStitch(),
+//                absolute = true,
+//            ),
             Thread(
-                color = 0xff0000,
-                absolute = false,
-                stitches = (0..distance.toInt()).map { y ->
-                    val dir = if (y % 2 == 0) 1 else -1
-                    (0..distance.toInt()).map { x ->
-                        XY(dir * step, 0f)
-                    } + XY(0f, step)
-                }.flatten().toTypedArray()
-            ),
-            Thread(
-                color = 0x00ff00,
+                color = color,
+                stitches = outer.toZigZagStitch(
+                    thickness,
+                    distance
+                ),
                 absolute = true,
-                stitches = (0..360).map { angle ->
-                    val alpha = angle.radians()
-                    XY(
-                        x = cos(alpha) * distance * step / 2 + distance / 2 * step,
-                        y = sin(alpha) * distance * step / 2 + distance / 2 * step,
-                    )
-                }.toTypedArray()
             )
         )
-    )
-
-    private fun Int.radians(): Float = ((this / 180.0) * PI).toFloat()
-
-    private fun getSampleBitmap(context: Context) =
-        ResourcesCompat.getDrawable(context.resources, R.drawable.test, null)
-            ?.toBitmap(config = Bitmap.Config.ARGB_4444)
-            ?.scale(32, 32, false)
-            ?.reduceColors(3)
-            ?.first
+    }
 }
 
 private fun List<List<XY>>.toStitchesWithMinimalJumps(): Array<XY> {
@@ -248,3 +254,63 @@ private fun Bitmap.getColorStrands(
 
     return resultMap
 }
+
+private val Array<Thread>.stitches: Array<XY>
+    get() = flatMap { thread -> thread.stitches.toList() }.toTypedArray()
+
+private fun Geometry.toStitch(): Array<XY> = coordinates.map { XY(it.x, it.y) }.toTypedArray()
+
+private fun Geometry.toZigZagStitch(
+    thickness: Float,
+    distance: Float
+): Array<XY> {
+    val xys = mutableListOf<XY>()
+
+    var humpDirection = 1f
+
+    val points = coordinates.map { XY(it.x, it.y) }        .removeDoubles()
+    points
+        .forEachIndexed { index, first ->
+            val second = points.getOrElse(index + 1) { points.first() }
+            val direction = second - first
+            val normal = direction.orthogonal().normalize() * thickness
+            val hump = normal / 2f
+
+            if (normal.isNaN || direction.isNaN) {
+                Log.e("NO", "Malformed segment at index $index: $first to $second.")
+            } else {
+                xys.add(first)
+                xys.add(first + (humpDirection * hump))
+                humpDirection *= -1f
+
+                val stitchCount = direction.length / distance
+                val step = direction * (1f / stitchCount)
+                val offset = step / 4f
+                for (count in 0..<stitchCount.floor) {
+                    val current = step * count.toFloat()
+                    xys.add(first + current + offset + (humpDirection * hump))
+                    humpDirection *= -1f
+                    xys.add(first + current + (3f * offset) + (humpDirection * hump))
+                    humpDirection *= -1f
+                }
+            }
+        }
+    xys.add(points.first())
+
+    return xys
+        .removeDoubles()
+        .toTypedArray()
+}
+
+private fun List<XY>.removeDoubles() = filterIndexed { index, xy ->
+    if (index  == lastIndex) {
+        true
+    } else {
+        val other = get(index + 1)
+        xy.distanceTo(other) > 0.01f
+    }
+}
+
+
+private val Float.floor: Int
+    get() = floor(this).toInt()

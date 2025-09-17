@@ -1,10 +1,19 @@
 package de.berlindroid.zepatch.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -19,28 +28,29 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
+import de.berlindroid.zepatch.isBusy
+import de.berlindroid.zepatch.utils.multiLet
 
 @Composable
 fun PatchableToReducedBitmap(
     modifier: Modifier = Modifier,
-    image: ImageBitmap? = null,
-    colorCount: Int = 3,
-    reducedImage: ImageBitmap? = null,
+    state: SetupBitmap,
     computeReducedBitmap: () -> Unit = {},
     onColorCountChanged: (Int) -> Unit = {}
 ) {
     // Local text state so users can clear or type partial numbers without snapping back to default
-    var colorText by rememberSaveable { mutableStateOf(colorCount.toString()) }
+    var colorText by rememberSaveable { mutableStateOf(state.colorCount.toString()) }
 
     // Keep local text in sync if colorCount changes from outside (e.g., recomputations)
-    LaunchedEffect(colorCount) {
-        colorText = colorCount.toString()
+    LaunchedEffect(state.colorCount) {
+        colorText = state.colorCount.toString()
     }
 
     val focusManager = LocalFocusManager.current
@@ -54,13 +64,13 @@ fun PatchableToReducedBitmap(
             title = "Reduce Colors",
             helpText = "Choose the number of colors and generate a simplified bitmap suitable for embroidering."
         )
-        image?.let {
-            Image(
-                bitmap = it,
-                contentDescription = "patch bitmap",
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+
+        Image(
+            bitmap = state.image,
+            contentDescription = "patch bitmap",
+            modifier = Modifier.fillMaxWidth()
+        )
+
         TextField(
             value = colorText,
             onValueChange = { new ->
@@ -97,30 +107,46 @@ fun PatchableToReducedBitmap(
             }
         )
 
-        Button(enabled = isValidColorCount(colorText), onClick = computeReducedBitmap) { Text("Reduce") }
+        Button(
+            enabled = isValidColorCount(colorText) && !state.isBusy(),
+            onClick = computeReducedBitmap
+        ) { Text("Reduce") }
 
-        reducedImage?.let {
-            Image(
-                bitmap = it,
-                contentDescription = "patch bitmap",
-                modifier = Modifier.fillMaxWidth()
-            )
-        } ?: CircularProgressIndicator()
+        state.reducedBitmap?.multiLet(state.reducedHistogram) { bitmap, histogram ->
+            Column {
+                Image(
+                    bitmap = bitmap,
+                    contentDescription = "reduced bitmap",
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                LazyRow(
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val totalColors = histogram.spread.values.sum()
+                    items(histogram.spread.toList()) { entry ->
+                        val (color, amount) = entry
+                        Text(
+                            modifier = Modifier.padding(4.dp),
+                            text = "${((amount.toFloat() / totalColors) * 100f).toInt()}%"
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .border(1.dp, color = Color.Black)
+                                .background(Color(color))
+                        )
+                        Spacer(Modifier.width(16.dp))
+                    }
+                }
+            }
+        }
+
+        if (state.currentlyReducingColors) {
+            CircularProgressIndicator()
+        }
     }
 }
 
 fun isValidColorCount(colorCountText: String): Boolean =
-    (colorCountText.toIntOrNull() ?: -1) in 1..7
-
-
-@Preview(showBackground = true)
-@Composable
-fun PatchableToReducedBitmapPreview() {
-    PatchableToReducedBitmap(
-        image = ImageBitmap(width = 100, height = 100), // Example ImageBitmap
-        colorCount = 5,
-        onColorCountChanged = {}
-    )
-}
-
-
+    (colorCountText.toIntOrNull() ?: -1) in 2..7

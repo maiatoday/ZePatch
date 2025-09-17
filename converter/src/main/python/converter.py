@@ -5,6 +5,7 @@ from pystitch import *
 import os
 from os.path import join
 from base64 import b64encode
+from datetime import datetime
 
 def convert(embroidery, file_format="pes"):
     # convert embroidery into PES
@@ -32,7 +33,7 @@ def convert(embroidery, file_format="pes"):
     pattern.add_stitch_relative(END, 0, 0)
     pattern.move_center_to_origin()
 
-    filename = join(os.environ["HOME"], f"{name}-{stitches}.{file_format}")
+    filename = join(os.environ["HOME"], f"{name}-{stitches}@{datetime.now().isoformat()}.{file_format}")
 
     print(f"Saving to '{filename}'.")
     if file_format == "png":

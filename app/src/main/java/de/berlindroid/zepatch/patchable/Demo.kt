@@ -2,7 +2,6 @@ package de.berlindroid.zepatch.patchable
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -203,15 +202,7 @@ fun AndyB(
                         topStartPercent = 0,
                         topEndPercent = 50,
                         bottomStartPercent = 50,
-                        bottomEndPercent = 50
-                    )
-                )
-                .border(
-                    12.dp, Color.Black, RoundedCornerShape(
-                        topStartPercent = 0,
-                        topEndPercent = 50,
-                        bottomStartPercent = 50,
-                        bottomEndPercent = 50
+                        bottomEndPercent = 0
                     )
                 ),
         ) {
@@ -224,7 +215,7 @@ fun AndyB(
                 fontSize = 64.sp,
                 style = TextStyle.Default.copy(shadow = Shadow(blurRadius = 12f)),
                 color = Color.Black,
-                text = "Andy",
+                text = "AndyB",
                 letterSpacing = (-1).sp
             )
             Spacer(modifier = Modifier.weight(1f))
@@ -242,7 +233,7 @@ fun Emoji(
         shouldCapture = shouldCapture,
         onBitmap = onBitmap,
     ) {
-        Text("💪", fontSize = 48.sp)
+        Text("💪", fontSize = 180.sp)
     }
 }
 
@@ -262,6 +253,24 @@ fun Emoji2(
 
 @Preview
 @Composable
-fun PreviewDemo() {
+fun PreviewAndyA() {
     AndyA()
+}
+
+@Preview
+@Composable
+fun PreviewAndyB() {
+    AndyB()
+}
+
+@Preview
+@Composable
+fun PreviewFlex() {
+    Emoji()
+}
+
+@Preview
+@Composable
+fun PreviewBerlindroid() {
+    BerlindroidLogo()
 }
