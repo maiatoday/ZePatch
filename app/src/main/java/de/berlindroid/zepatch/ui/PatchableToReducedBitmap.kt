@@ -71,39 +71,15 @@ fun PatchableToReducedBitmap(
             modifier = Modifier.fillMaxWidth()
         )
 
-        TextField(
-            value = colorText,
-            onValueChange = { new ->
-                // Allow empty and numeric-only input
-                if (new.isEmpty()) {
-                    colorText = ""
-                } else if (new.isDigitsOnly()) {
-                    colorText = new
-                    new.toIntOrNull()?.let { onColorCountChanged(it) }
-                }
-                // ignore non-digit edits
-            },
-            label = { Text("How many colors do you need?") },
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    if (isValidColorCount(colorText)) {
-                        focusManager.clearFocus()
-                        computeReducedBitmap()
-                    }
-                }
-            ),
-            isError = !isValidColorCount(colorText), // Set the error state
-            supportingText = {
-                if (!isValidColorCount(colorText)) {
-                    Text(
-                        text = "Please enter a valid color count (between 1 and 7)",
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.error
-                    )
-                }
+        NumberSelector(
+            value = "${state.colorCount}",
+            label = "How many colors do you need?",
+            errorText = "Please enter a valid color count (between 1 and 7)",
+            acceptableNumberEntered = {isValidColorCount(colorCountText = it)},
+            onNumberChanged = onColorCountChanged,
+            onDone = {
+                focusManager.clearFocus()
+                computeReducedBitmap()
             }
         )
 
