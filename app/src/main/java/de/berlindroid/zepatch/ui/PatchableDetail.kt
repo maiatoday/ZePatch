@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import de.berlindroid.zepatch.WizardViewModel
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
+import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 
 @ExperimentalMaterial3Api
 @Composable
@@ -48,7 +48,7 @@ fun PatchableDetail(
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is SetupEmbroidery) {
+        if (uiState is EmbroiderBitmap) {
             viewModel.setLauncher(launcher)
         }
     }

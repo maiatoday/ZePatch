@@ -15,15 +15,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.tooling.preview.Preview
-import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.colorHistogram
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
+import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 import de.berlindroid.zepatch.isBusy
 
 @Composable
 fun BitmapToStitches(
     modifier: Modifier = Modifier,
-    state: SetupEmbroidery,
+    state: EmbroiderBitmap,
     onCreateEmbroidery: () -> Unit,
 ) {
     Column(
@@ -60,7 +59,7 @@ fun BitmapToStitchesPreview() {
     val imageBitmap = ImageBitmap(width = 100, height = 100)
     val histogram = imageBitmap.asAndroidBitmap().colorHistogram()
     BitmapToStitches(
-        state = SetupEmbroidery(
+        state = EmbroiderBitmap(
             image = imageBitmap,
             colorCount = 44,
             reducedBitmap = imageBitmap,

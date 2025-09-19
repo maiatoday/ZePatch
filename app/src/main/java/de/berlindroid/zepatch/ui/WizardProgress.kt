@@ -1,6 +1,5 @@
 package de.berlindroid.zepatch.ui
 
-import android.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,9 +13,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.berlindroid.zepatch.WizardViewModel.UiState
 import de.berlindroid.zepatch.WizardViewModel.UiState.Done
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.ReduceBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
+import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 import de.berlindroid.zepatch.isBusy
 
 @Composable
@@ -45,8 +44,8 @@ fun WizardProgress(
             totalSteps = 4,
             currentStep = when (state) {
                 is SetupComposable -> 0
-                is SetupBitmap -> 1
-                is SetupEmbroidery -> 2
+                is ReduceBitmap -> 1
+                is EmbroiderBitmap -> 2
                 is Done -> 3
                 else -> 0
             }
@@ -62,7 +61,7 @@ fun WizardProgress(
             enabled = state.isCompleted() && !state.isBusy()
         ) {
             when (state) {
-                is SetupEmbroidery -> Text("Save")
+                is EmbroiderBitmap -> Text("Save")
                 is Done -> Text("Finish")
                 else -> Text("Next")
             }

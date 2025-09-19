@@ -16,9 +16,9 @@ import androidx.core.graphics.createBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState
 import de.berlindroid.zepatch.WizardViewModel.UiState.Done
 import de.berlindroid.zepatch.WizardViewModel.UiState.SelectPatchable
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.ReduceBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
+import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 import de.berlindroid.zepatch.patchables
 
 @Composable
@@ -57,13 +57,13 @@ fun WizardContent(
                     onBitmap = onBitmapUpdated
                 )
 
-                is SetupBitmap -> PatchableToReducedBitmap(
+                is ReduceBitmap -> PatchableToReducedBitmap(
                     state = state,
                     onColorCountChanged = onColorCountUpdated,
                     computeReducedBitmap = onComputeReducedBitmap,
                 )
 
-                is SetupEmbroidery -> BitmapToStitches(
+                is EmbroiderBitmap -> BitmapToStitches(
                     state = state,
                     onCreateEmbroidery = onCreateEmbroidery,
                 )
@@ -80,7 +80,7 @@ fun WizardContent(
 @Composable
 private fun WizardContentPreview() {
     WizardContent(
-        state = SetupBitmap("name", createBitmap(100, 100).asImageBitmap()),
+        state = ReduceBitmap("name", createBitmap(100, 100).asImageBitmap()),
         patchable = patchables.values.first(),
         onBitmapUpdated = {},
         onColorCountUpdated = {},

@@ -19,9 +19,9 @@ import com.embroidermodder.punching.reduceColors
 import de.berlindroid.zepatch.WizardViewModel.UiState
 import de.berlindroid.zepatch.WizardViewModel.UiState.Done
 import de.berlindroid.zepatch.WizardViewModel.UiState.SelectPatchable
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.ReduceBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
+import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.utils.multiLet
 import kotlinx.coroutines.Dispatchers
@@ -74,14 +74,14 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         ) : UiState(error) {
             override fun previous(): UiState = SelectPatchable()
 
-            override fun next(): UiState = SetupBitmap(name, image!!)
+            override fun next(): UiState = ReduceBitmap(name, image!!)
 
             override fun isCompleted(): Boolean = image != null
 
             override fun copyWithError(error: String): UiState = copy(error = error)
         }
 
-        data class SetupBitmap(
+        data class ReduceBitmap(
             // input
             val name: String,
             val image: ImageBitmap,
@@ -100,7 +100,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         ) : UiState(error) {
             override fun previous(): UiState = SetupComposable(name)
 
-            override fun next(): UiState = SetupEmbroidery(
+            override fun next(): UiState = EmbroiderBitmap(
                 name,
                 image,
                 colorCount,
@@ -114,7 +114,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
             override fun copyWithError(error: String): UiState = copy(error = error)
         }
 
-        data class SetupEmbroidery(
+        data class EmbroiderBitmap(
             // input
             val name: String,
             val image: ImageBitmap,
@@ -137,7 +137,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
 
             override val error: String? = null
         ) : UiState(error) {
-            override fun previous(): UiState = SetupBitmap(name, image, colorCount)
+            override fun previous(): UiState = ReduceBitmap(name, image, colorCount)
 
             override fun next(): UiState {
                 embroideryData?.multiLet(launcher) { data, launcher ->
@@ -184,7 +184,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
             val embroideryPreviewImage: ImageBitmap,
             override val error: String? = null
         ) : UiState(error) {
-            override fun previous(): UiState = SetupEmbroidery(name, image, colorCount, reducedBitmap, reducedHistogram)
+            override fun previous(): UiState = EmbroiderBitmap(name, image, colorCount, reducedBitmap, reducedHistogram)
 
             override fun next(): UiState = SelectPatchable()
 
@@ -239,20 +239,20 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
     fun updateColorCount(count: Int) {
         _uiState.update {
             when (it) {
-                is SetupBitmap -> it.copy(colorCount = count)
+                is ReduceBitmap -> it.copy(colorCount = count)
                 else -> it.copyWithError("Colors could not be updated in state ${it.javaClass.simpleName}.")
             }
         }
     }
 
     fun computeReducedBitmap() {
-        if (_uiState.value !is SetupBitmap) {
+        if (_uiState.value !is ReduceBitmap) {
             _uiState.update { it.copyWithError("Cannot create reduced bitmap in state ${it.javaClass.simpleName}.") }
             return
         }
 
         _uiState.update {
-            (it as? SetupBitmap)?.copy(
+            (it as? ReduceBitmap)?.copy(
                 reducedBitmap = null,
                 reducedHistogram = null,
                 currentlyReducingColors = true
@@ -260,7 +260,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val state = _uiState.value as SetupBitmap
+            val state = _uiState.value as ReduceBitmap
             val aspect = state.image.width / state.image.height.toFloat()
             val (reducedBmp, histogram) = state.image.asAndroidBitmap()
                 .copy(Bitmap.Config.ARGB_8888, false)
@@ -272,7 +272,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
 
             _uiState.update {
                 when (it) {
-                    is SetupBitmap -> it.copy(
+                    is ReduceBitmap -> it.copy(
                         reducedBitmap = reducedBmp.asImageBitmap(),
                         reducedHistogram = histogram,
                         currentlyReducingColors = false,
@@ -285,7 +285,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun createEmbroidery() {
-        if (_uiState.value !is SetupEmbroidery) {
+        if (_uiState.value !is EmbroiderBitmap) {
             _uiState.update {
                 it.copyWithError("No, sadly you have to be in embroidery mode!")
             }
@@ -293,7 +293,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         _uiState.update {
-            (it as? SetupEmbroidery)?.copy(
+            (it as? EmbroiderBitmap)?.copy(
                 embroideryData = null,
                 embroideryPreviewImage = null,
                 currentlyEmbroidering = true
@@ -302,7 +302,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val state = _uiState.value as SetupEmbroidery
+                val state = _uiState.value as EmbroiderBitmap
 
                 val aspect = state.reducedBitmap.width / state.reducedBitmap.height.toFloat()
                 val embroidery = StitchToPES.createEmbroideryFromBitmap(
@@ -328,7 +328,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
                 }
 
                 _uiState.update {
-                    (it as? SetupEmbroidery)?.copy(
+                    (it as? EmbroiderBitmap)?.copy(
                         embroideryData = pes,
                         embroideryPreviewImage = previewImage,
                         currentlyEmbroidering = false,
@@ -337,7 +337,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
             } catch (th: Throwable) {
                 _uiState.update {
                     val message = "Throwable thrown: ${th}."
-                    (it as? SetupEmbroidery)?.copy(
+                    (it as? EmbroiderBitmap)?.copy(
                         embroideryData = null,
                         embroideryPreviewImage = null,
                         currentlyEmbroidering = false,
@@ -356,7 +356,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         }
 
         val bytes = when (state) {
-            is SetupEmbroidery -> state.embroideryData
+            is EmbroiderBitmap -> state.embroideryData
             is Done -> state.embroideryData
             else -> null
         }
@@ -388,8 +388,8 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun setLauncher(launcher: ManagedActivityResultLauncher<Intent, ActivityResult>) {
-        if (_uiState.value is SetupEmbroidery) {
-            _uiState.update { (it as SetupEmbroidery).copy(launcher = launcher) }
+        if (_uiState.value is EmbroiderBitmap) {
+            _uiState.update { (it as EmbroiderBitmap).copy(launcher = launcher) }
         }
     }
 }
@@ -397,7 +397,7 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
 fun UiState.isBusy(): Boolean = when (this) {
     is Done -> false
     is SelectPatchable -> false
-    is SetupBitmap -> currentlyReducingColors
+    is ReduceBitmap -> currentlyReducingColors
     is SetupComposable -> false
-    is SetupEmbroidery -> currentlyEmbroidering
+    is EmbroiderBitmap -> currentlyEmbroidering
 }
