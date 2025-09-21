@@ -19,8 +19,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import de.berlindroid.zepatch.SharedImageStore
 import de.berlindroid.zepatch.WizardViewModel
 import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 
@@ -45,6 +48,27 @@ fun PatchableDetail(
     // Reset wizard state when a different patchable is opened
     LaunchedEffect(name) {
         viewModel.setPatchableNameAndStart(name)
+    }
+
+    // If a shared/picked image is waiting, consume it and push the wizard forward
+    val context = LocalContext.current
+    LaunchedEffect(name) {
+        val uri = SharedImageStore.take()
+        if (uri != null) {
+            try {
+                val bmp = context.contentResolver.openInputStream(uri)?.use { ins ->
+                    android.graphics.BitmapFactory.decodeStream(ins)
+                }?.asImageBitmap()
+                if (bmp != null) {
+                    viewModel.updateBitmap(bmp)
+                    if (viewModel.isStateCompleted()) {
+                        viewModel.progressToNextState()
+                    }
+                }
+            } catch (_: Exception) {
+                // Ignored; Wizard will show error if needed later
+            }
+        }
     }
 
     LaunchedEffect(uiState) {
