@@ -3,6 +3,8 @@ package de.berlindroid.zepatch.ui
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -19,6 +21,14 @@ fun PatchableBoundingBox(
             color = Color.Black,
         ),
     ) {
-        patchable(false, {})
+        CompositionLocalProvider(LocalPatchInList provides true) {
+            patchable(false, {})
+        }
     }
 }
+
+/**
+ * CompositionLocal to indicate a patch is being rendered inside the list (preview context),
+ * so interactive controls inside patches can be disabled.
+ */
+val LocalPatchInList = compositionLocalOf { false }

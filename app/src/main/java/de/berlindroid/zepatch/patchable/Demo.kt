@@ -40,6 +40,7 @@ import androidx.compose.material3.Button
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.layout.padding
+import de.berlindroid.zepatch.ui.LocalPatchInList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Patch("AppLogo")
@@ -314,9 +315,11 @@ fun SharedImage(
             }
         }
     }
+    val inList = LocalPatchInList.current
     Column {
         Button(
             modifier = Modifier.padding(8.dp),
+            enabled = !inList,
             onClick = { launcher.launch("image/*") }) {
             Text("Choose image from gallery")
         }
