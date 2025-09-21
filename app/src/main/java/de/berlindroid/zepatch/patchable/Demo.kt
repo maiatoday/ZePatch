@@ -274,3 +274,23 @@ fun PreviewFlex() {
 fun PreviewBerlindroid() {
     BerlindroidLogo()
 }
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Patch("Shared Image")
+@Composable
+fun SharedImage(
+    shouldCapture: Boolean = false,
+    onBitmap: (ImageBitmap) -> Unit = {},
+) {
+    SafeArea(
+        shouldCapture = shouldCapture,
+        onBitmap = onBitmap,
+    ) {
+        Image(
+            modifier = Modifier.size(200.dp),
+            painter = painterResource(R.drawable.ai_logo),
+            contentDescription = null
+        )
+    }
+}

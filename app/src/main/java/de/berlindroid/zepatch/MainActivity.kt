@@ -66,7 +66,8 @@ class MainActivity : ComponentActivity() {
                 // If launched via share, navigate directly into the wizard
                 LaunchedEffect(initialShared) {
                     if (initialShared != null) {
-                        patchables.keys.firstOrNull()?.let { name ->
+                        val target = patchables.keys.firstOrNull { it == "Shared Image" } ?: patchables.keys.firstOrNull()
+                        target?.let { name ->
                             scope.launch {
                                 scaffoldNavigator.navigateTo(
                                     ListDetailPaneScaffoldRole.Detail,
@@ -92,8 +93,9 @@ class MainActivity : ComponentActivity() {
                             // Not from SAF or no persistable flag
                         }
                         SharedImageStore.put(uri)
-                        // Navigate to first available patchable
-                        patchables.keys.firstOrNull()?.let { name ->
+                        // Navigate to Shared Image (preferred) or first available patchable
+                        val target = patchables.keys.firstOrNull { it == "Shared Image" } ?: patchables.keys.firstOrNull()
+                        target?.let { name ->
                             scope.launch {
                                 scaffoldNavigator.navigateTo(
                                     ListDetailPaneScaffoldRole.Detail,
