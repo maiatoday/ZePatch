@@ -8,17 +8,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
@@ -26,6 +28,7 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -61,7 +64,7 @@ class MainActivity : ComponentActivity() {
                 val scope = rememberCoroutineScope()
 
                 // If launched via share, navigate directly into the wizard
-                androidx.compose.runtime.LaunchedEffect(initialShared) {
+                LaunchedEffect(initialShared) {
                     if (initialShared != null) {
                         patchables.keys.firstOrNull()?.let { name ->
                             scope.launch {
@@ -116,8 +119,11 @@ class MainActivity : ComponentActivity() {
                                         title = { Text("ZePatch") },
                                         scrollBehavior = scrollBehavior,
                                         actions = {
-                                            TextButton(onClick = { pickImageLauncher.launch("image/*") }) {
-                                                Text("Import image")
+                                            IconButton(onClick = { pickImageLauncher.launch("image/*") }) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Add,
+                                                    contentDescription = "Import image"
+                                                )
                                             }
                                         }
                                     )

@@ -1,5 +1,7 @@
 package de.berlindroid.zepatch.ui
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -57,10 +59,11 @@ fun PatchableDetail(
         if (uri != null) {
             try {
                 val bmp = context.contentResolver.openInputStream(uri)?.use { ins ->
-                    android.graphics.BitmapFactory.decodeStream(ins)
-                }?.asImageBitmap()
-                if (bmp != null) {
-                    viewModel.updateBitmap(bmp)
+                    BitmapFactory.decodeStream(ins)
+                }
+                val safe = bmp?.copy(Bitmap.Config.ARGB_8888, false)?.asImageBitmap()
+                if (safe != null) {
+                    viewModel.updateBitmap(safe)
                     if (viewModel.isStateCompleted()) {
                         viewModel.progressToNextState()
                     }
