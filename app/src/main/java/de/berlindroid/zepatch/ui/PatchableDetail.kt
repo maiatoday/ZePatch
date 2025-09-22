@@ -87,7 +87,8 @@ fun PatchableDetail(
                 onBitmapUpdated = viewModel::updateBitmap,
                 onColorCountUpdated = viewModel::updateColorCount,
                 onComputeReducedBitmap = viewModel::computeReducedBitmap,
-                onCreateEmbroidery = viewModel::createEmbroidery,
+                onUpdateEmbroidery = viewModel::updateEmbroideryConfig,
+                onCreateEmbroidery = viewModel::createEmbroidery
             )
 
             WizardProgress(

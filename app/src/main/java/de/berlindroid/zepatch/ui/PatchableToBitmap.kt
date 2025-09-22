@@ -14,8 +14,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 
@@ -47,15 +47,16 @@ fun PatchableToBitmap(
             image = img
             shouldCapture = false
         }
+
         Button(onClick = {
             image = null
             shouldCapture = true
         }) { Text("Generate Bitmap") }
+
         image?.let {
             Image(
                 bitmap = it,
                 contentDescription = "patch bitmap",
-                modifier = Modifier.fillMaxWidth()
             )
             onBitmap(it)
         } ?: Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {

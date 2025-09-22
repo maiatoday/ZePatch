@@ -97,6 +97,7 @@ object StitchToPES {
         mmDensityX: Float,
         mmDensityY: Float,
         satinBorderThickness: Float,
+        satinBorderDensity: Float,
     ): Embroidery {
         val strandsPerColor =
             bitmap.getColorStrands(
@@ -118,11 +119,10 @@ object StitchToPES {
 
         return Embroidery(
             name,
-            threads
-                    + threads.satinBorder(
+            threads + threads.satinBorder(
                 color = Color.BLACK,
                 thickness = satinBorderThickness,
-                distance = satinBorderThickness / 2f,
+                distance = satinBorderDensity,
             )
         )
     }
@@ -149,8 +149,8 @@ object StitchToPES {
             Thread(
                 color = color,
                 stitches = outer.toZigZagStitch(
-                    thickness,
-                    distance
+                    thickness * 10,
+                    distance * 10
                 ),
                 absolute = true,
             )
@@ -268,7 +268,7 @@ private fun Geometry.toZigZagStitch(
 
     var humpDirection = 1f
 
-    val points = coordinates.map { XY(it.x, it.y) }        .removeDoubles()
+    val points = coordinates.map { XY(it.x, it.y) }.removeDoubles()
     points
         .forEachIndexed { index, first ->
             val second = points.getOrElse(index + 1) { points.first() }
@@ -303,7 +303,7 @@ private fun Geometry.toZigZagStitch(
 }
 
 private fun List<XY>.removeDoubles() = filterIndexed { index, xy ->
-    if (index  == lastIndex) {
+    if (index == lastIndex) {
         true
     } else {
         val other = get(index + 1)

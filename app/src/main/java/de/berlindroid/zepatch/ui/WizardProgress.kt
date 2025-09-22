@@ -13,9 +13,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.berlindroid.zepatch.WizardViewModel.UiState
 import de.berlindroid.zepatch.WizardViewModel.UiState.Done
+import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState.ReduceBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
-import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
 import de.berlindroid.zepatch.isBusy
 
 @Composable

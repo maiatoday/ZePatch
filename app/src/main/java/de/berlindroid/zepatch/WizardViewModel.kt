@@ -18,10 +18,10 @@ import com.embroidermodder.punching.Histogram
 import com.embroidermodder.punching.reduceColors
 import de.berlindroid.zepatch.WizardViewModel.UiState
 import de.berlindroid.zepatch.WizardViewModel.UiState.Done
-import de.berlindroid.zepatch.WizardViewModel.UiState.SelectPatchable
-import de.berlindroid.zepatch.WizardViewModel.UiState.ReduceBitmap
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
 import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.ReduceBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.SelectPatchable
+import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
 import de.berlindroid.zepatch.stiches.StitchToPES
 import de.berlindroid.zepatch.utils.multiLet
 import kotlinx.coroutines.Dispatchers
@@ -124,7 +124,12 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
 
             // configurable
             // TODO
-            // density
+            val size: Float = 50f,
+            val densityX: Float = 0.5f,
+            val densityY: Float = 0.2f,
+            val borderThickness: Float = 3f,
+            val borderDensity: Float = 0.5f,
+
             // satin border yes no
             // sizes
             // colors?
@@ -245,6 +250,28 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun updateEmbroideryConfig(
+        densityX: Float,
+        densityY: Float,
+        size: Float,
+        borderThickness: Float,
+        borderDensity: Float
+    ) {
+        _uiState.update {
+            when (it) {
+                is EmbroiderBitmap -> it.copy(
+                    densityX = densityX,
+                    densityY = densityY,
+                    size = size,
+                    borderThickness = borderThickness,
+                    borderDensity = borderDensity,
+                )
+
+                else -> it.copyWithError("Cannot update embroidery in state ${it.javaClass.simpleName}.")
+            }
+        }
+    }
+
     fun computeReducedBitmap() {
         if (_uiState.value !is ReduceBitmap) {
             _uiState.update { it.copyWithError("Cannot create reduced bitmap in state ${it.javaClass.simpleName}.") }
@@ -309,11 +336,12 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
                     name = state.name,
                     bitmap = state.reducedBitmap.asAndroidBitmap(),
                     histogram = state.reducedHistogram,
-                    mmWidth = 50f * aspect,
-                    mmHeight = 50f,
-                    mmDensityX = 0.5f,
-                    mmDensityY = 0.2f,
-                    satinBorderThickness = 10f,
+                    mmWidth = state.size * aspect,
+                    mmHeight = state.size,
+                    mmDensityX = state.densityX,
+                    mmDensityY = state.densityY,
+                    satinBorderThickness = state.borderThickness,
+                    satinBorderDensity = state.borderDensity,
                 )
 
                 val context = getApplication<Application>().applicationContext
