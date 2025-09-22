@@ -12,14 +12,14 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.createBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState
 import de.berlindroid.zepatch.WizardViewModel.UiState.Done
+import de.berlindroid.zepatch.WizardViewModel.UiState.EmbroiderBitmap
+import de.berlindroid.zepatch.WizardViewModel.UiState.ReduceBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState.SelectPatchable
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupBitmap
 import de.berlindroid.zepatch.WizardViewModel.UiState.SetupComposable
-import de.berlindroid.zepatch.WizardViewModel.UiState.SetupEmbroidery
 import de.berlindroid.zepatch.patchables
+import de.berlindroid.zepatch.utils.randomBitmap
 
 @Composable
 fun WizardContent(
@@ -28,6 +28,13 @@ fun WizardContent(
     onBitmapUpdated: (ImageBitmap) -> Unit,
     onColorCountUpdated: (Int) -> Unit,
     onComputeReducedBitmap: () -> Unit,
+    onUpdateEmbroidery: (
+        densityX: Float,
+        densityY: Float,
+        size: Float,
+        borderThickness: Float,
+        borderDensity: Float,
+    ) -> Unit,
     onCreateEmbroidery: () -> Unit,
 ) {
     Card(
@@ -57,15 +64,16 @@ fun WizardContent(
                     onBitmap = onBitmapUpdated
                 )
 
-                is SetupBitmap -> PatchableToReducedBitmap(
+                is ReduceBitmap -> PatchableToReducedBitmap(
                     state = state,
                     onColorCountChanged = onColorCountUpdated,
                     computeReducedBitmap = onComputeReducedBitmap,
                 )
 
-                is SetupEmbroidery -> BitmapToStitches(
+                is EmbroiderBitmap -> BitmapToStitches(
                     state = state,
                     onCreateEmbroidery = onCreateEmbroidery,
+                    onUpdateEmbroidery = onUpdateEmbroidery,
                 )
 
                 is Done -> Celebration(
@@ -80,11 +88,12 @@ fun WizardContent(
 @Composable
 private fun WizardContentPreview() {
     WizardContent(
-        state = SetupBitmap("name", createBitmap(100, 100).asImageBitmap()),
+        state = ReduceBitmap("name", randomBitmap().asImageBitmap()),
         patchable = patchables.values.first(),
         onBitmapUpdated = {},
         onColorCountUpdated = {},
         onComputeReducedBitmap = {},
+        onUpdateEmbroidery = { _, _, _, _, _ -> },
         onCreateEmbroidery = {},
     )
 }
