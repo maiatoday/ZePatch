@@ -123,11 +123,10 @@ class WizardViewModel(application: Application) : AndroidViewModel(application) 
             val reducedHistogram: Histogram,
 
             // configurable
-            // TODO
             val size: Float = 50f,
-            val densityX: Float = 0.5f,
-            val densityY: Float = 0.2f,
-            val borderThickness: Float = 3f,
+            val densityX: Float = 0.4f,
+            val densityY: Float = 0.4f,
+            val borderThickness: Float = 2f,
             val borderDensity: Float = 0.5f,
 
             // satin border yes no

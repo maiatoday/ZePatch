@@ -117,13 +117,18 @@ object StitchToPES {
             )
         }.toTypedArray()
 
-        return Embroidery(
-            name,
-            threads + threads.satinBorder(
+        val border = if (satinBorderThickness > 0.1f && satinBorderDensity > 0.05f) {
+            threads.satinBorder(
                 color = Color.BLACK,
                 thickness = satinBorderThickness,
                 distance = satinBorderDensity,
             )
+        } else {
+            listOf()
+        }
+        return Embroidery(
+            name,
+            threads + border
         )
     }
 
