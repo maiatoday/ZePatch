@@ -256,13 +256,8 @@ fun MsPaint(
                                     }
                                     work.setPixels(pixels, 0, w, 0, 0, w, h)
 
-                                    // Replace display bitmap content with work
-                                    val dis = displayBitmapState.value
-                                    if (dis != null && (dis.width == w && dis.height == h)) {
-                                        AndroidCanvas(dis).drawBitmap(work, 0f, 0f, null)
-                                    } else {
-                                        displayBitmapState.value = work
-                                    }
+                                    // Replace display bitmap with new reference so Compose observes state change
+                                    displayBitmapState.value = work
                                     bitmapVersion.intValue++
                                 }
                             )
