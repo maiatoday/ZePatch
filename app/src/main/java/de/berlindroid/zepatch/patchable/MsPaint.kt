@@ -47,10 +47,14 @@ import de.berlindroid.zepatch.annotations.Patch
 import de.berlindroid.zepatch.ui.LocalPatchInList
 import de.berlindroid.zepatch.ui.SafeArea
 import android.graphics.Bitmap
+import androidx.compose.runtime.mutableIntStateOf
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Paint as AndroidPaint
 import android.graphics.Paint.Cap as AndroidCap
 import android.graphics.Paint.Style as AndroidStyle
+import androidx.core.graphics.get
+import androidx.core.graphics.set
+import androidx.core.graphics.createBitmap
 
 private enum class OutlineShape { Circle, Diamond, Square, Heart }
 private data class StrokePath(val color: Color, val points: SnapshotStateList<Offset>)
@@ -59,16 +63,16 @@ private enum class Tool { Brush, Fill }
 // Simple BFS flood fill on an ARGB_8888 bitmap
 private fun floodFill(bitmap: Bitmap, sx: Int, sy: Int, newColor: Int) {
     if (sx < 0 || sy < 0 || sx >= bitmap.width || sy >= bitmap.height) return
-    val target = bitmap.getPixel(sx, sy)
+    val target = bitmap[sx, sy]
     if (target == newColor) return
     val w = bitmap.width
     val h = bitmap.height
     val deque = ArrayDeque<Int>()
     fun push(x: Int, y: Int) {
         if (x in 0 until w && y in 0 until h) {
-            if (bitmap.getPixel(x, y) == target) {
+            if (bitmap[x, y] == target) {
                 deque.addLast((y shl 16) or x)
-                bitmap.setPixel(x, y, newColor)
+                bitmap[x, y] = newColor
             }
         }
     }
@@ -119,7 +123,7 @@ fun MsPaint(
     // Display bitmap that holds filled regions. Size is set on first layout.
     val displayBitmapState = remember { mutableStateOf<Bitmap?>(null) }
     // Increment to trigger redraws after mutating the bitmap in-place
-    val bitmapVersion = remember { mutableStateOf(0) }
+    val bitmapVersion = remember { mutableIntStateOf(0) }
 
     // Android paint used when rasterizing strokes to a work bitmap
     val androidPaint = remember {
@@ -135,7 +139,7 @@ fun MsPaint(
     LaunchedEffect(outlineShape.value) {
         strokes.clear()
         displayBitmapState.value?.eraseColor(Color.Transparent.toArgb())
-        bitmapVersion.value++
+        bitmapVersion.intValue++
     }
 
     Column(modifier = Modifier.padding(8.dp)) {
@@ -165,8 +169,14 @@ fun MsPaint(
 
         // Tool selection
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { currentTool.value = Tool.Brush }, enabled = !inList) { Text("Brush") }
-            Button(onClick = { currentTool.value = Tool.Fill }, enabled = !inList) { Text("Fill") }
+            Button(
+                onClick = { currentTool.value = Tool.Brush },
+                enabled = !inList && currentTool.value != Tool.Brush,
+            ) { Text("Brush") }
+            Button(
+                onClick = { currentTool.value = Tool.Fill },
+                enabled = !inList && currentTool.value != Tool.Fill,
+            ) { Text("Fill") }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -185,9 +195,9 @@ fun MsPaint(
                         val h = sz.height.coerceAtLeast(1)
                         val existing = displayBitmapState.value
                         if (existing == null || existing.width != w || existing.height != h) {
-                            displayBitmapState.value = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                            displayBitmapState.value = createBitmap(w, h)
                             // No need to redraw strokes here; they are rendered vectorially. Fills will use a work bitmap when needed.
-                            bitmapVersion.value++
+                            bitmapVersion.intValue++
                         }
                     }
                     .pointerInput(selectedColor.value, outlineShape.value, currentTool.value) {
@@ -204,7 +214,7 @@ fun MsPaint(
                             )
                         }
                     }
-                    .pointerInput(selectedColor.value, outlineShape.value, currentTool.value, bitmapVersion.value) {
+                    .pointerInput(selectedColor.value, outlineShape.value, currentTool.value, bitmapVersion.intValue) {
                         if (currentTool.value == Tool.Fill) {
                             detectTapGestures(
                                 onTap = { offset ->
@@ -253,7 +263,7 @@ fun MsPaint(
                                     } else {
                                         displayBitmapState.value = work
                                     }
-                                    bitmapVersion.value++
+                                    bitmapVersion.intValue++
                                 }
                             )
                         }
@@ -304,7 +314,6 @@ fun MsPaint(
                 // Clip to inside for drawing
                 clipPath(outline) {
                     // reference version to trigger redraw after bitmap changes
-                    val _v = bitmapVersion.value
                     // Draw filled regions bitmap first
                     displayBitmapState.value?.let { bmp ->
                         drawImage(bmp.asImageBitmap())
