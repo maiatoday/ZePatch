@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,13 +39,50 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import de.berlindroid.zepatch.annotations.Patch
 import de.berlindroid.zepatch.ui.LocalPatchInList
 import de.berlindroid.zepatch.ui.SafeArea
+import android.graphics.Bitmap
+import android.graphics.Canvas as AndroidCanvas
+import android.graphics.Paint as AndroidPaint
+import android.graphics.Paint.Cap as AndroidCap
+import android.graphics.Paint.Style as AndroidStyle
 
 private enum class OutlineShape { Circle, Diamond, Square, Heart }
 private data class StrokePath(val color: Color, val points: SnapshotStateList<Offset>)
+private enum class Tool { Brush, Fill }
+
+// Simple BFS flood fill on an ARGB_8888 bitmap
+private fun floodFill(bitmap: Bitmap, sx: Int, sy: Int, newColor: Int) {
+    if (sx < 0 || sy < 0 || sx >= bitmap.width || sy >= bitmap.height) return
+    val target = bitmap.getPixel(sx, sy)
+    if (target == newColor) return
+    val w = bitmap.width
+    val h = bitmap.height
+    val deque = ArrayDeque<Int>()
+    fun push(x: Int, y: Int) {
+        if (x in 0 until w && y in 0 until h) {
+            if (bitmap.getPixel(x, y) == target) {
+                deque.addLast((y shl 16) or x)
+                bitmap.setPixel(x, y, newColor)
+            }
+        }
+    }
+    push(sx, sy)
+    while (deque.isNotEmpty()) {
+        val p = deque.removeFirst()
+        val x = p and 0xFFFF
+        val y = (p ushr 16) and 0xFFFF
+        push(x + 1, y)
+        push(x - 1, y)
+        push(x, y + 1)
+        push(x, y - 1)
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Patch("MsPaint")
@@ -76,9 +114,28 @@ fun MsPaint(
     // list of strokes (each stroke is a polyline of points)
     val strokes = remember { mutableStateListOf<StrokePath>() }
 
+    val currentTool = remember { mutableStateOf(Tool.Brush) }
+
+    // Display bitmap that holds filled regions. Size is set on first layout.
+    val displayBitmapState = remember { mutableStateOf<Bitmap?>(null) }
+    // Increment to trigger redraws after mutating the bitmap in-place
+    val bitmapVersion = remember { mutableStateOf(0) }
+
+    // Android paint used when rasterizing strokes to a work bitmap
+    val androidPaint = remember {
+        AndroidPaint().apply {
+            isAntiAlias = true
+            style = AndroidStyle.STROKE
+            strokeCap = AndroidCap.ROUND
+            strokeWidth = 12f
+        }
+    }
+
     // Clearing drawing when outline shape changes
     LaunchedEffect(outlineShape.value) {
         strokes.clear()
+        displayBitmapState.value?.eraseColor(Color.Transparent.toArgb())
+        bitmapVersion.value++
     }
 
     Column(modifier = Modifier.padding(8.dp)) {
@@ -106,6 +163,14 @@ fun MsPaint(
 
         Spacer(modifier = Modifier.height(8.dp))
 
+        // Tool selection
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { currentTool.value = Tool.Brush }, enabled = !inList) { Text("Brush") }
+            Button(onClick = { currentTool.value = Tool.Fill }, enabled = !inList) { Text("Fill") }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         // SafeArea contains the drawing canvas only
         SafeArea(
             shouldCapture = shouldCapture,
@@ -115,17 +180,83 @@ fun MsPaint(
                 modifier = Modifier
                     .size(200.dp)
                     .background(Color.Transparent)
-                    .pointerInput(selectedColor.value, outlineShape.value) {
-                        detectDragGestures(
-                            onDragStart = { offset ->
-                                strokes.add(StrokePath(selectedColor.value, mutableStateListOf(offset)))
-                            },
-                            onDrag = { _, dragAmount ->
-                                val last = strokes.lastOrNull() ?: return@detectDragGestures
-                                val lastPoint = last.points.last()
-                                last.points.add(lastPoint + dragAmount)
-                            }
-                        )
+                    .onSizeChanged { sz ->
+                        val w = sz.width.coerceAtLeast(1)
+                        val h = sz.height.coerceAtLeast(1)
+                        val existing = displayBitmapState.value
+                        if (existing == null || existing.width != w || existing.height != h) {
+                            displayBitmapState.value = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                            // No need to redraw strokes here; they are rendered vectorially. Fills will use a work bitmap when needed.
+                            bitmapVersion.value++
+                        }
+                    }
+                    .pointerInput(selectedColor.value, outlineShape.value, currentTool.value) {
+                        if (currentTool.value == Tool.Brush) {
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    strokes.add(StrokePath(selectedColor.value, mutableStateListOf(offset)))
+                                },
+                                onDrag = { _, dragAmount ->
+                                    val last = strokes.lastOrNull() ?: return@detectDragGestures
+                                    val lastPoint = last.points.last()
+                                    last.points.add(lastPoint + dragAmount)
+                                }
+                            )
+                        }
+                    }
+                    .pointerInput(selectedColor.value, outlineShape.value, currentTool.value, bitmapVersion.value) {
+                        if (currentTool.value == Tool.Fill) {
+                            detectTapGestures(
+                                onTap = { offset ->
+                                    val bmp = displayBitmapState.value ?: return@detectTapGestures
+                                    val x = offset.x.toInt().coerceIn(0, bmp.width - 1)
+                                    val y = offset.y.toInt().coerceIn(0, bmp.height - 1)
+
+                                    // Prepare work bitmap: copy current fills, then rasterize strokes as barriers
+                                    val work = bmp.copy(Bitmap.Config.ARGB_8888, true)
+                                    val barrierColor = 0x01000000
+                                    val barrierPaint = AndroidPaint().apply {
+                                        isAntiAlias = true
+                                        style = AndroidStyle.STROKE
+                                        strokeCap = AndroidCap.ROUND
+                                        strokeWidth = androidPaint.strokeWidth
+                                        color = barrierColor
+                                    }
+                                    val aCanvas = AndroidCanvas(work)
+                                    // Draw all stroke segments as thin barriers
+                                    strokes.forEach { stroke ->
+                                        for (i in 1 until stroke.points.size) {
+                                            val s = stroke.points[i - 1]
+                                            val e = stroke.points[i]
+                                            aCanvas.drawLine(s.x, s.y, e.x, e.y, barrierPaint)
+                                        }
+                                    }
+
+                                    // Run flood fill from tap
+                                    val newColor = selectedColor.value.toArgb() or (0xFF shl 24)
+                                    floodFill(work, x, y, newColor)
+
+                                    // Remove barrier pixels from result (make them transparent)
+                                    val w = work.width
+                                    val h = work.height
+                                    val pixels = IntArray(w * h)
+                                    work.getPixels(pixels, 0, w, 0, 0, w, h)
+                                    for (i in pixels.indices) {
+                                        if (pixels[i] == barrierColor) pixels[i] = 0x00000000
+                                    }
+                                    work.setPixels(pixels, 0, w, 0, 0, w, h)
+
+                                    // Replace display bitmap content with work
+                                    val dis = displayBitmapState.value
+                                    if (dis != null && (dis.width == w && dis.height == h)) {
+                                        AndroidCanvas(dis).drawBitmap(work, 0f, 0f, null)
+                                    } else {
+                                        displayBitmapState.value = work
+                                    }
+                                    bitmapVersion.value++
+                                }
+                            )
+                        }
                     }
                     .height(if (inList) 180.dp else 240.dp)
             ) {
@@ -172,6 +303,14 @@ fun MsPaint(
 
                 // Clip to inside for drawing
                 clipPath(outline) {
+                    // reference version to trigger redraw after bitmap changes
+                    val _v = bitmapVersion.value
+                    // Draw filled regions bitmap first
+                    displayBitmapState.value?.let { bmp ->
+                        drawImage(bmp.asImageBitmap())
+                    }
+
+                    // Draw strokes on top for crisp edges and live preview
                     val strokeWidth = 12f
                     strokes.forEach { stroke ->
                         // draw as connected segments
