@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -43,7 +44,7 @@ import de.berlindroid.zepatch.ui.LocalPatchInList
 import de.berlindroid.zepatch.ui.SafeArea
 
 private enum class OutlineShape { Circle, Diamond, Square, Heart }
-private data class StrokePath(val color: Color, val points: MutableList<Offset>)
+private data class StrokePath(val color: Color, val points: SnapshotStateList<Offset>)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Patch("MsPaint")
@@ -116,7 +117,7 @@ fun MsPaint(
                     .pointerInput(selectedColor.value, outlineShape.value) {
                         detectDragGestures(
                             onDragStart = { offset ->
-                                strokes.add(StrokePath(selectedColor.value, mutableListOf(offset)))
+                                strokes.add(StrokePath(selectedColor.value, mutableStateListOf(offset)))
                             },
                             onDrag = { _, dragAmount ->
                                 val last = strokes.lastOrNull() ?: return@detectDragGestures
