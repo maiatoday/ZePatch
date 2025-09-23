@@ -62,6 +62,7 @@ fun MsPaint(
         Color.Red,
         Color.Yellow,
         Color.Magenta,
+        Color.Cyan,
         Color(0xFFFFA500), // orange
         Color(0xFF800080), // purple
         Color(0xFF0000FF), // blue
