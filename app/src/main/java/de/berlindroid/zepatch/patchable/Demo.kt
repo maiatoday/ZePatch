@@ -315,3 +315,21 @@ fun ComposableSheepPatchable(
     }
 }
 
+@Preview
+@Patch("ZeWednesday")
+@Composable
+fun ZeWednesday(
+    shouldCapture: Boolean = false, // used to activate the convert to bitmap
+    onBitmap: (ImageBitmap) -> Unit = {}, // used to return the bitmap from the SafeArea
+) {
+    SafeArea(
+        shouldCapture = shouldCapture,
+        onBitmap = onBitmap,
+    ) {
+        Image(
+            modifier = Modifier.size(200.dp),
+            painter = painterResource(R.drawable.ze_frog),
+            contentDescription = null
+        )
+    }
+}
