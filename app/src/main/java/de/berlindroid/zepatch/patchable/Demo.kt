@@ -72,6 +72,25 @@ fun BerlindroidLogo(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Patch("FourOfThem")
+@Composable
+fun FourOfThemLogo(
+    shouldCapture: Boolean = false,
+    onBitmap: (ImageBitmap) -> Unit = {},
+) {
+    SafeArea(
+        shouldCapture = shouldCapture,
+        onBitmap = onBitmap,
+    ) {
+        Image(
+            modifier = Modifier.size(200.dp),
+            painter = painterResource(R.drawable.four_of_them),
+            contentDescription = null
+        )
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Patch("GoogleLogo")
